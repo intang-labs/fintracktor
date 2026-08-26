@@ -467,13 +467,10 @@ function renderSetup() {
 
 /* ── the sheet ─────────────────────────────────────────────────────────── */
 const sheet = document.getElementById('sheet'), scrim = document.getElementById('scrim');
-let editing = null;
+let editing = null, invMode = 'add';
 
 function openSheet(id) {
-  const list = sorted();
   editing = id ? state.entries.find(e => e.id === id) : null;
-  const prevOf = d => list.filter(e => e.date < d && (!editing || e.id !== editing.id)).at(-1);
-
   document.getElementById('sheetTitle').textContent = editing ? 'Edit entry' : 'New entry';
   document.getElementById('saveEntry').textContent = editing ? 'Save changes' : 'Save entry';
   const date = editing ? editing.date : todayISO();
@@ -481,7 +478,11 @@ function openSheet(id) {
   document.getElementById('fSave').value = editing ? group(editing.savings) : '';
   document.getElementById('fInv').value = editing ? group(editing.invested) : '';
   document.getElementById('fNote').value = editing ? (editing.note || '') : '';
-  syncDateLabel(); syncInvHint(prevOf);
+
+  // Contributions are how people think month to month, so a new entry defaults
+  // to Add. Editing shows the stored total, since that is what is being fixed.
+  invMode = editing || !sheetPrev(date) ? 'total' : 'add';
+  syncDateLabel(); syncInvUI();
 
   sheet.hidden = false;
   requestAnimationFrame(() => { scrim.classList.add('on'); sheet.classList.add('on'); });
@@ -497,30 +498,90 @@ function syncDateLabel() {
   document.getElementById('dateLabel').textContent =
     (v === todayISO() ? 'Today · ' : '') + fmtDay(v);
 }
-/* Shows the contribution the app derives, so the number it stores is visible. */
-function syncInvHint(prevOf) {
-  const hint = document.getElementById('invHint');
-  const v = document.getElementById('fDate').value || todayISO();
-  const prev = (prevOf || (d => sorted().filter(e => e.date < d && (!editing || e.id !== editing.id)).at(-1)))(v);
-  const now = readMoney('fInv');
-  if (!prev || !now) { hint.textContent = ''; return; }
-  const d = now - prev.invested;
-  hint.style.color = d < 0 ? 'var(--over)' : 'var(--save)';
-  hint.textContent = `${d >= 0 ? '+' : '−'}${money(Math.abs(d))} since ${fmtShort(prev.date)}`;
+/* The entry immediately before this one, ignoring the entry being edited. */
+function sheetPrev(date) {
+  return sorted().filter(e => e.date < date && (!editing || e.id !== editing.id)).at(-1) || null;
 }
+
+/* Whichever way the figure is being entered, show the other one — so what
+   actually gets stored is never a surprise. */
+function syncInvUI() {
+  const date = document.getElementById('fDate').value || todayISO();
+  const prev = sheetPrev(date);
+  const el = document.getElementById('fInv');
+  const label = document.getElementById('invLabel');
+  const hint = document.getElementById('invHint');
+  const seg = document.getElementById('invMode');
+  const typed = el.value.trim() !== '';
+  const raw = readMoney('fInv');
+
+  seg.hidden = !prev;
+  seg.querySelectorAll('button').forEach(b =>
+    b.setAttribute('aria-pressed', String(b.dataset.mode === invMode)));
+
+  if (!prev) {
+    label.textContent = 'Invested so far — everything to date';
+    hint.textContent = '';
+  } else if (invMode === 'add') {
+    label.textContent = `Added to investments since ${fmtShort(prev.date)}`;
+    hint.style.color = 'var(--save)';
+    hint.textContent = typed
+      ? `New total ${money(prev.invested + raw)}`
+      : `Running total so far ${money(prev.invested)}`;
+  } else {
+    label.textContent = 'Invested — running total';
+    const d = raw - prev.invested;
+    hint.style.color = d < 0 ? 'var(--over)' : 'var(--save)';
+    hint.textContent = typed
+      ? `${d >= 0 ? '+' : '−'}${money(Math.abs(d))} since ${fmtShort(prev.date)}`
+      : `Was ${money(prev.invested)} on ${fmtShort(prev.date)}`;
+  }
+
+  const sh = document.getElementById('saveHint');
+  sh.textContent = prev ? `Last logged ${money(prev.savings)} on ${fmtShort(prev.date)}` : '';
+}
+
+/* Switching mode converts whatever is already typed, so the meaning of the
+   number on screen never changes underneath the switch. */
+document.getElementById('invMode').addEventListener('click', e => {
+  const b = e.target.closest('button[data-mode]');
+  if (!b || b.dataset.mode === invMode) return;
+  const el = document.getElementById('fInv');
+  const prev = sheetPrev(document.getElementById('fDate').value || todayISO());
+  if (prev && el.value.trim()) {
+    const raw = readMoney('fInv');
+    el.value = invMode === 'add'
+      ? group(prev.invested + raw)
+      : group(Math.max(0, raw - prev.invested));
+  }
+  invMode = b.dataset.mode;
+  syncInvUI();
+});
 
 document.getElementById('fab').onclick = () => openSheet(null);
 document.getElementById('sheetClose').onclick = closeSheet;
 scrim.onclick = closeSheet;
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !sheet.hidden) closeSheet(); });
-document.getElementById('fDate').onchange = () => { syncDateLabel(); syncInvHint(); };
-document.getElementById('fInv').addEventListener('input', () => syncInvHint());
+document.getElementById('fDate').onchange = () => { syncDateLabel(); syncInvUI(); };
+document.getElementById('fInv').addEventListener('input', syncInvUI);
 
 document.getElementById('saveEntry').onclick = async () => {
   const date = document.getElementById('fDate').value || todayISO();
-  const savings = readMoney('fSave'), invested = readMoney('fInv');
+  const savings = readMoney('fSave'), rawInv = readMoney('fInv');
   if (!document.getElementById('fSave').value.trim() && !document.getElementById('fInv').value.trim()) {
     toast('Enter at least one figure.'); return;
+  }
+  const prev = sheetPrev(date);
+  const invested = invMode === 'add' && prev ? prev.invested + rawInv : rawInv;
+
+  // Entering a contribution into the Total field is the easy mistake to make,
+  // and it reads as a large loss. Catch it before it is stored.
+  if (prev && invested < prev.invested) {
+    const ok = confirm(
+      `This records your invested total falling from ${money(prev.invested)} to ${money(invested)}.\n\n`
+      + `If you meant that you added ${money(rawInv)} this month, cancel and switch to Add.\n\n`
+      + `Save the drop anyway?`);
+    if (!ok) return;
   }
   const note = document.getElementById('fNote').value.trim();
   const clash = state.entries.find(e => e.date === date && (!editing || e.id !== editing.id));

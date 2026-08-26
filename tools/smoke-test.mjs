@@ -69,21 +69,54 @@ console.log('\nlogging entries');
 // The + button is deliberately absent on Setup, so come back to Pace first.
 check('fab is hidden on setup', await page.locator('#fab').isVisible(), 'false');
 await page.click('nav button[data-tab="pace"]');
-for (const [date, sav, inv] of [
-  ['2026-05-26', '520000', '815000'],
-  ['2026-06-24', '558000', '870000'],
-  ['2026-07-26', '596000', '925000'],
-  ['2026-08-26', '642000', '980000'],
+// The last one is entered as a contribution, the way it is meant to be used
+// month to month; the earlier ones set up the running total.
+for (const [date, sav, inv, mode] of [
+  ['2026-05-26', '520000', '815000', null],
+  ['2026-06-24', '558000', '870000', 'total'],
+  ['2026-07-26', '596000', '925000', 'total'],
+  ['2026-08-26', '642000', '55000', 'add'],
 ]) {
   await page.click('#fab');
   await page.waitForTimeout(360);
   await page.fill('#fDate', date);
   await page.fill('#fSave', sav);
+  if (!mode) check('no switch offered on the very first entry',
+    await page.locator('#invMode').isVisible(), 'false');
+  if (mode) await page.click(`#invMode button[data-mode="${mode}"]`);
   await page.fill('#fInv', inv);
+  if (mode === 'add') check('Add mode shows the resulting total',
+    await page.locator('#invHint').textContent(), 'New total ₹9,80,000');
   await page.click('#saveEntry');
   await page.waitForTimeout(380);
 }
-check('derived contribution hint appeared while typing', errors.length, 0);
+check('contributions and totals both land on the same figure', errors.length, 0);
+
+console.log('\nentering a contribution, not a total');
+// The reported bug: 3L logged as the total, then 15k meant as "I added this".
+await page.click('#fab');
+await page.waitForTimeout(360);
+await page.fill('#fDate', '2026-09-26');
+check('a new entry defaults to Add',
+  await page.locator('#invMode button[data-mode="add"]').getAttribute('aria-pressed'), 'true');
+await page.fill('#fInv', '15000');
+check('Add adds to the running total', await page.locator('#invHint').textContent(), 'New total ₹9,95,000');
+await page.click('#invMode button[data-mode="total"]');
+check('switching mode converts what was typed', await page.inputValue('#fInv'), '9,95,000');
+
+// Now make the mistake deliberately and check it is caught.
+await page.fill('#fInv', '15000');
+check('Total mode shows the drop plainly',
+  (await page.locator('#invHint').textContent()).startsWith('−₹9,65,000'), 'true');
+let dialog = '';
+page.on('dialog', async d => { dialog = d.message(); await d.dismiss(); });
+await page.click('#saveEntry');
+await page.waitForTimeout(300);
+check('a collapsing total is challenged',
+  dialog.includes('falling from ₹9,80,000 to ₹15,000'), 'true');
+check('and nothing was written', await page.locator('#tab-history .swipe').count(), 4);
+await page.click('#sheetClose');
+await page.waitForTimeout(340);
 
 console.log('\npace maths');
 // Baseline is the 26 Jul figure (596,000). Target 10,00,000 by Mar 2027 leaves
