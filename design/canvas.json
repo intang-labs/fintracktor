@@ -54,7 +54,7 @@
       "x": 1000,
       "y": -230,
       "w": 390,
-      "text": "The + button floats over every tab. Tap it and this sheet slides up.\nTwo numbers, because the monthly contribution is the difference between successive invested totals — the app works it out and shows it back."
+      "text": "The + button floats over every tab. Tap it and this sheet slides up.\nInvestments are entered as a contribution by default — \"I added 15k\" — and the running total is shown back. Switch to TOTAL to type the cumulative figure instead; whatever is already typed converts across."
     },
     {
       "id": "privacy",

@@ -79,6 +79,9 @@ header{display:flex;justify-content:space-between;align-items:center;padding:0 4
 .seg{display:flex;gap:2px;padding:3px;background:var(--sunken);border-radius:11px}
 .seg button{padding:6px 12px;border:0;border-radius:8px;background:none;
   font-family:var(--mono);font-size:11px;color:var(--muted);cursor:pointer}
+.seg[hidden]{display:none}
+.seg.mini{background:#E1E6EC;padding:2px;border-radius:9px;flex:none}
+.seg.mini button{padding:5px 11px;font-size:10px;border-radius:7px;letter-spacing:.05em;text-transform:uppercase}
 .seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);font-weight:600;
   box-shadow:0 1px 3px rgba(19,23,32,.12)}
 
@@ -127,6 +130,8 @@ header{display:flex;justify-content:space-between;align-items:center;padding:0 4
 .fld.text input{font-family:var(--sans);font-size:15px;font-weight:400}
 .fld input::placeholder{color:var(--faint);font-weight:400}
 .fld .hint{font-size:11px;color:var(--save);font-weight:600;margin-top:4px;min-height:15px}
+.fld .hint.muted{color:var(--muted);font-weight:500}
+.fld-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .fld select{font-family:var(--sans);font-size:17px;appearance:none}
 .pair{display:flex;gap:10px}
 .pair .fld{flex:1}
