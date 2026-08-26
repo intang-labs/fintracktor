@@ -12,7 +12,7 @@
     { "id": "sheet-note", "x": 1000, "y": -230, "w": 390,
       "text": "The + button floats over every tab. Tap it and this sheet slides up.\nThree numbers and you are done — the Log tab is gone, history moved to its own tab." },
     { "id": "privacy", "x": 2000, "y": -230, "w": 390,
-      "text": "No account, no backend, no analytics. Data is written to IndexedDB on the device.\nExport / import JSON is the only way it moves between phones." }
+      "text": "No account, no backend, no analytics. Data is written to IndexedDB on the device.\nTwo CSV exports feed a Google Sheet by hand each month \u2014 entries on one tab, summary on the other.\nA JSON backup is the route to a new phone. Nothing syncs on its own." }
   ],
   "launch": { "view": "canvas" }
 }

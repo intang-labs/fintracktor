@@ -28,7 +28,7 @@
   </style>
 </helmet>
 
-<div style="position:relative;width:390px;height:960px;background:#F2F4F7;padding:18px 14px 0;display:flex;flex-direction:column;gap:12px;overflow:hidden;">
+<div style="position:relative;width:390px;height:1140px;background:#F2F4F7;padding:18px 14px 0;display:flex;flex-direction:column;gap:12px;overflow:hidden;">
 
   <div style="padding:0 4px 2px;">
     <div style="font-size:26px;font-weight:660;letter-spacing:-.03em;">Setup</div>
@@ -86,19 +86,42 @@
   </div>
 
   <div class="card" style="padding:10px 18px 12px;">
-    <div class="eyebrow" style="padding:8px 0 2px;">Your data</div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0 2px;">
+      <span class="eyebrow">Export</span>
+      <span style="font-family:var(--mono);font-size:10px;color:#C97A16;background:rgba(201,122,22,.10);padding:4px 9px;border-radius:999px;font-weight:600;">31 DAYS AGO</span>
+    </div>
     <div class="row">
-      <span class="tile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131720" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M8 11l4 4 4-4"/><path d="M5 19h14"/></svg></span>
+      <span class="tile" style="background:#F5F6F9;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131720" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M9.5 9.5v10"/></svg></span>
       <span style="flex:1;">
-        <span style="display:block;font-size:15px;font-weight:600;">Export a copy</span>
-        <span style="display:block;font-size:12px;color:#6E7684;">A JSON file you keep</span>
+        <span style="display:block;font-size:15px;font-weight:600;color:#131720;">Entries as CSV</span>
+        <span style="display:block;font-size:12px;color:#6E7684;">One row per entry — paste into a sheet</span>
       </span>
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A2AAB8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M9 6l6 6-6 6"/></svg>
     </div>
     <div class="row">
-      <span class="tile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131720" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V8"/><path d="M8 12l4-4 4 4"/><path d="M5 19h14"/></svg></span>
+      <span class="tile" style="background:#F5F6F9;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131720" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20V11M12 20V4M18 20v-6"/></svg></span>
       <span style="flex:1;">
-        <span style="display:block;font-size:15px;font-weight:600;">Import from a file</span>
+        <span style="display:block;font-size:15px;font-weight:600;color:#131720;">Summary as CSV</span>
+        <span style="display:block;font-size:12px;color:#6E7684;">Targets and pace, for a second tab</span>
+      </span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A2AAB8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M9 6l6 6-6 6"/></svg>
+    </div>
+    <div class="row">
+      <span class="tile" style="background:#F5F6F9;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131720" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M8 11l4 4 4-4"/><path d="M5 19h14"/></svg></span>
+      <span style="flex:1;">
+        <span style="display:block;font-size:15px;font-weight:600;color:#131720;">Full backup as JSON</span>
+        <span style="display:block;font-size:12px;color:#6E7684;">Everything, for moving to a new phone</span>
+      </span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A2AAB8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M9 6l6 6-6 6"/></svg>
+    </div>
+  </div>
+
+  <div class="card" style="padding:10px 18px 12px;">
+    <div class="eyebrow" style="padding:8px 0 2px;">Your data</div>
+    <div class="row">
+      <span class="tile" style="background:#F5F6F9;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131720" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V8"/><path d="M8 12l4-4 4 4"/><path d="M5 19h14"/></svg></span>
+      <span style="flex:1;">
+        <span style="display:block;font-size:15px;font-weight:600;color:#131720;">Restore from a backup</span>
         <span style="display:block;font-size:12px;color:#6E7684;">Replaces what is here now</span>
       </span>
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A2AAB8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M9 6l6 6-6 6"/></svg>
@@ -116,8 +139,8 @@
   <div style="display:flex;align-items:flex-start;gap:9px;padding:2px 8px 0;">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0F8A7E" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px;"><path d="M12 3l7 3v6c0 4.4-3 8-7 9-4-1-7-4.6-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
     <span style="font-size:12px;color:#6E7684;line-height:1.55;">
-      No account, no server, no analytics. Every figure is written to this device and never leaves it.
-      Storage is marked persistent here.
+      No account, no server, no analytics. Every figure is written to this device and stays there
+      until you export a file yourself. Storage is marked persistent here.
     </span>
   </div>
 
