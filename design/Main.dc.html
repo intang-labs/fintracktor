@@ -23,10 +23,14 @@
       padding:4px 8px;border-radius:999px;font-weight:600}
     .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding-top:11px}
     .tabl{font-size:10px;font-weight:600;letter-spacing:.03em}
+    .bart{height:10px;border-radius:999px;background:#E9ECF1;overflow:hidden;margin-top:12px}
+    .barf{display:block;height:100%;border-radius:999px}
+    .foot{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;font-size:12px;color:#6E7684}
+    .foot b{font-family:var(--mono);font-variant-numeric:tabular-nums;color:#131720;font-weight:600}
   </style>
 </helmet>
 
-<div style="position:relative;width:390px;height:1110px;background:#F2F4F7;padding:18px 14px 0;display:flex;flex-direction:column;gap:14px;overflow:hidden;">
+<div style="position:relative;width:390px;height:1130px;background:#F2F4F7;padding:18px 14px 0;display:flex;flex-direction:column;gap:14px;overflow:hidden;">
 
   <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;">
     <div style="display:flex;align-items:center;gap:9px;">
@@ -39,43 +43,37 @@
   </div>
 
   <div class="card" style="padding:20px;">
-    <div class="eyebrow">Net worth</div>
-    <div class="num" style="font-size:44px;font-weight:600;line-height:1.02;margin:8px 0 10px;">₹18,42,000</div>
+    <div class="eyebrow">Savings + invested</div>
+    <div class="num" style="font-size:44px;font-weight:600;line-height:1.02;margin:8px 0 10px;">₹16,22,000</div>
     <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;background:rgba(15,138,126,.10);color:#0F8A7E;font-size:12px;font-weight:600;">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0F8A7E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6"/><path d="M6 12l6-6 6 6"/></svg>
-      <span class="num">₹1,12,000</span>
+      <span class="num">₹1,01,000</span>
       <span style="font-weight:500;opacity:.75;">since 26 Jul</span>
     </div>
-
     <div style="display:flex;height:14px;border-radius:999px;background:#E9ECF1;overflow:hidden;margin-top:18px;">
       <span style="width:21.4%;background:#0F8A7E;"></span>
-      <span style="width:40%;background:#C97A16;"></span>
+      <span style="width:32.7%;background:#C97A16;"></span>
     </div>
-    <div style="display:flex;justify-content:space-between;margin-top:9px;font-size:12px;color:#6E7684;">
-      <span><span class="num" style="color:#131720;font-weight:600;">61%</span> of <span class="num">₹30,00,000</span></span>
-      <span class="num">16 MONTHS LEFT</span>
-    </div>
+    <div class="foot"><span><b>54%</b> of <span class="num">₹30,00,000</span></span><span class="num">NEXT TARGET MAR 2027</span></div>
   </div>
 
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <span class="eyebrow">Savings by 31 August</span>
-      <span style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:4px 9px;border-radius:999px;font-weight:600;background:rgba(201,122,22,.10);color:#C97A16;">5 days left</span>
+      <span class="chip" style="background:rgba(201,122,22,.10);color:#C97A16;">5 days left</span>
     </div>
     <div style="display:flex;align-items:baseline;gap:9px;margin-top:11px;">
       <span class="num" style="font-size:30px;font-weight:600;">₹6,47,100</span>
       <span style="font-size:12px;color:#6E7684;">to stay on pace</span>
     </div>
-    <div style="height:12px;border-radius:999px;background:#E9ECF1;overflow:hidden;margin-top:13px;">
-      <span style="display:block;height:100%;width:90%;border-radius:999px;background:#0F8A7E;"></span>
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:9px;font-size:12px;color:#6E7684;">
-      <span>You are at <span class="num" style="color:#131720;font-weight:600;">₹6,42,000</span></span>
-      <span class="num" style="color:#0F8A7E;font-weight:600;font-size:12px;">₹5,100 TO GO</span>
+    <div class="bart" style="height:12px;margin-top:13px;"><span class="barf" style="width:90%;background:#0F8A7E;"></span></div>
+    <div class="foot" style="margin-top:9px;">
+      <span>You are at <b>₹6,42,000</b></span>
+      <span class="num" style="color:#0F8A7E;font-weight:600;">₹5,100 TO GO</span>
     </div>
     <div style="margin-top:14px;padding:11px 13px;border-radius:14px;background:rgba(15,138,126,.07);display:flex;align-items:center;gap:10px;">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0F8A7E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M20 6L9 17l-5-5"/></svg>
-      <span style="flex:1;font-size:13px;line-height:1.45;">Investments done — <span class="num" style="font-weight:600;">₹55,000</span> added, <span class="num">₹50,000</span> was the ask.</span>
+      <span style="flex:1;font-size:13px;line-height:1.45;">Investments done — <span class="num" style="font-weight:600;">₹55,000</span> added, <span class="num">₹53,700</span> was the ask.</span>
     </div>
   </div>
 
@@ -90,11 +88,9 @@
       <span class="num" style="font-size:25px;font-weight:600;">₹6,42,000</span>
       <span class="num" style="font-size:13px;color:#6E7684;">of ₹10,00,000</span>
     </div>
-    <div style="height:10px;border-radius:999px;background:#E9ECF1;overflow:hidden;margin-top:12px;">
-      <span style="display:block;height:100%;width:64%;border-radius:999px;background:#0F8A7E;"></span>
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;font-size:12px;color:#6E7684;">
-      <span>Needs <span class="num" style="color:#131720;font-weight:600;">₹51,100</span>/mo · at <span class="num" style="color:#131720;font-weight:600;">₹46,000</span></span>
+    <div class="bart"><span class="barf" style="width:64%;background:#0F8A7E;"></span></div>
+    <div class="foot">
+      <span>Needs <b>₹51,100</b>/mo · at <b>₹46,000</b></span>
       <span class="num" style="font-size:11px;">MAR 2027</span>
     </div>
   </div>
@@ -102,30 +98,21 @@
   <div class="card">
     <div style="display:flex;align-items:center;gap:9px;">
       <span style="width:9px;height:9px;border-radius:50%;background:#C97A16;flex:none;"></span>
-      <span style="flex:1;font-size:15px;font-weight:620;letter-spacing:-.01em;">Investments</span>
+      <span style="flex:1;font-size:15px;font-weight:620;letter-spacing:-.01em;">Invested</span>
       <span class="chip" style="background:rgba(15,138,126,.10);color:#0F8A7E;">On pace</span>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A2AAB8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M9 6l6 6-6 6"/></svg>
     </div>
     <div style="display:flex;align-items:baseline;gap:8px;margin-top:11px;">
-      <span class="num" style="font-size:25px;font-weight:600;">₹12,00,000</span>
+      <span class="num" style="font-size:25px;font-weight:600;">₹9,80,000</span>
       <span class="num" style="font-size:13px;color:#6E7684;">of ₹20,00,000</span>
     </div>
-    <div style="height:10px;border-radius:999px;background:#E9ECF1;overflow:hidden;margin-top:12px;">
-      <span style="display:block;height:100%;width:60%;border-radius:999px;background:#C97A16;"></span>
+    <div class="bart"><span class="barf" style="width:49%;background:#C97A16;"></span></div>
+    <div class="foot">
+      <span>Needs <b>₹53,700</b>/mo · adding <b>₹55,000</b></span>
+      <span class="num" style="font-size:11px;">MAR 2028</span>
     </div>
-    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;font-size:12px;color:#6E7684;">
-      <span>Needs <span class="num" style="color:#131720;font-weight:600;">₹50,000</span>/mo · adding <span class="num" style="color:#131720;font-weight:600;">₹55,000</span></span>
-      <span class="num" style="font-size:11px;">DEC 2027</span>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:14px;">
-      <div style="flex:1;padding:11px 13px;border-radius:14px;background:#F5F6F9;">
-        <div class="eyebrow" style="font-size:9px;">You put in</div>
-        <div class="num" style="font-size:15px;font-weight:600;margin-top:3px;">₹9,80,000</div>
-      </div>
-      <div style="flex:1;padding:11px 13px;border-radius:14px;background:rgba(15,138,126,.07);">
-        <div class="eyebrow" style="font-size:9px;color:#0F8A7E;">Market added</div>
-        <div class="num" style="font-size:15px;font-weight:600;margin-top:3px;color:#0F8A7E;">₹2,20,000</div>
-      </div>
+    <div style="margin-top:13px;padding:10px 13px;border-radius:14px;background:#F5F6F9;font-size:12px;color:#6E7684;line-height:1.45;">
+      Counts what you have put in. What it is worth today is deliberately left out.
     </div>
   </div>
 
@@ -138,7 +125,7 @@
         <span style="padding:6px 12px;border-radius:8px;font-family:var(--mono);font-size:11px;color:#6E7684;">ALL</span>
       </span>
     </div>
-    <svg viewBox="0 0 330 150" style="display:block;width:100%;height:150px;margin-top:10px;" aria-label="Savings and investments over time">
+    <svg viewBox="0 0 330 150" style="display:block;width:100%;height:150px;margin-top:10px;" aria-label="Savings and money invested over time">
       <defs>
         <linearGradient id="gInv" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="#C97A16" stop-opacity=".26"></stop>
@@ -149,14 +136,12 @@
           <stop offset="100%" stop-color="#0F8A7E" stop-opacity=".08"></stop>
         </linearGradient>
       </defs>
-      <line x1="18" y1="20.8" x2="312" y2="20.8" stroke="#131720" stroke-width="1.2" stroke-dasharray="2 5" stroke-linecap="round" opacity=".35"></line>
-      <text x="312" y="15" text-anchor="end" style="font-family:ui-monospace,Menlo,monospace;font-size:9px;fill:#6E7684;letter-spacing:.08em;">TARGET ₹30L</text>
-      <polygon points="18,105.5 91.5,104.5 165,103.2 238.5,101.9 312,100.3 312,59.8 238.5,64.1 165,66.9 91.5,70.4 18,73.7" fill="url(#gInv)"></polygon>
-      <polygon points="18,122 18,105.5 91.5,104.5 165,103.2 238.5,101.9 312,100.3 312,122" fill="url(#gSav)"></polygon>
-      <polyline points="18,73.7 91.5,70.4 165,66.9 238.5,64.1 312,59.8" fill="none" stroke="#C97A16" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"></polyline>
-      <polyline points="18,105.5 91.5,104.5 165,103.2 238.5,101.9 312,100.3" fill="none" stroke="#0F8A7E" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"></polyline>
-      <circle cx="312" cy="59.8" r="4" fill="#C97A16" stroke="#FFFFFF" stroke-width="2"></circle>
-      <circle cx="312" cy="100.3" r="4" fill="#0F8A7E" stroke="#FFFFFF" stroke-width="2"></circle>
+      <polygon points="18,92.6 91.5,90.8 165,88.5 238.5,86.2 312,83.5 312,24.7 238.5,30.7 165,36.3 91.5,41.9 18,47.0" fill="url(#gInv)"></polygon>
+      <polygon points="18,122 18,92.6 91.5,90.8 165,88.5 238.5,86.2 312,83.5 312,122" fill="url(#gSav)"></polygon>
+      <polyline points="18,47.0 91.5,41.9 165,36.3 238.5,30.7 312,24.7" fill="none" stroke="#C97A16" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"></polyline>
+      <polyline points="18,92.6 91.5,90.8 165,88.5 238.5,86.2 312,83.5" fill="none" stroke="#0F8A7E" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"></polyline>
+      <circle cx="312" cy="24.7" r="4" fill="#C97A16" stroke="#FFFFFF" stroke-width="2"></circle>
+      <circle cx="312" cy="83.5" r="4" fill="#0F8A7E" stroke="#FFFFFF" stroke-width="2"></circle>
       <text x="18" y="141" style="font-family:ui-monospace,Menlo,monospace;font-size:10px;fill:#A2AAB8;">APR</text>
       <text x="312" y="141" text-anchor="end" style="font-family:ui-monospace,Menlo,monospace;font-size:10px;fill:#A2AAB8;">AUG</text>
     </svg>
