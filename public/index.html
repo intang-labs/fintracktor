@@ -185,13 +185,21 @@
   <label class="fld">
     <span class="lbl">Savings — bank &amp; cash</span>
     <input id="fSave" type="text" inputmode="decimal" placeholder="0" autocomplete="off">
+    <span class="hint muted" id="saveHint"></span>
   </label>
 
-  <label class="fld">
-    <span class="lbl">Invested — total you have put in</span>
-    <input id="fInv" type="text" inputmode="decimal" placeholder="0" autocomplete="off">
+  <div class="fld" id="invField">
+    <div class="fld-head">
+      <span class="lbl" id="invLabel">Added to investments</span>
+      <span class="seg mini" id="invMode" role="group" aria-label="How to enter this figure">
+        <button type="button" data-mode="add" aria-pressed="true">Add</button>
+        <button type="button" data-mode="total" aria-pressed="false">Total</button>
+      </span>
+    </div>
+    <input id="fInv" type="text" inputmode="decimal" placeholder="0" autocomplete="off"
+           aria-labelledby="invLabel">
     <span class="hint" id="invHint"></span>
-  </label>
+  </div>
 
   <label class="fld text">
     <span class="lbl">Note</span>

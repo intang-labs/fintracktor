@@ -30,6 +30,21 @@ Because the figure is cumulative, the monthly contribution is just the differenc
 between two entries — so the app derives it rather than asking, and the entry
 form is two numbers rather than three.
 
+### Entering it
+
+Nobody thinks "my running total is now ₹3,15,000"; they think "I put in ₹15,000
+this month". So the invested field takes a **contribution** by default and shows
+the resulting total underneath. A **Total** switch is there for when you would
+rather type the cumulative figure — correcting a mistake, or catching up after a
+gap — and whatever is already typed converts across when you switch.
+
+The first entry has no switch: with nothing before it, there is nothing to add to,
+so it asks for everything you have put in to date.
+
+Entering a contribution into the Total field is the easy mistake, and it reads as
+a large loss. Any entry that lowers the running total is challenged before it is
+stored, naming both figures.
+
 ## Where the data lives
 
 In IndexedDB on the device, with `localStorage` as a fallback for private windows.
