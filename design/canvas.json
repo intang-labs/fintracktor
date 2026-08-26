@@ -1,15 +1,18 @@
 {
   "artboards": [
     { "file": "FirstRun.dc.html", "x": 0,    "y": 0, "w": 390, "h": 844, "title": "First run" },
-    { "file": "Main.dc.html",     "x": 500,  "y": 0, "w": 390, "h": 900, "title": "Pace" },
-    { "file": "Log.dc.html",      "x": 1000, "y": 0, "w": 390, "h": 1010, "title": "Log" },
-    { "file": "Setup.dc.html",    "x": 1500, "y": 0, "w": 390, "h": 1010, "title": "Setup" }
+    { "file": "Main.dc.html",     "x": 500,  "y": 0, "w": 390, "h": 980, "title": "Pace" },
+    { "file": "Sheet.dc.html",    "x": 1000, "y": 0, "w": 390, "h": 844, "title": "Log sheet" },
+    { "file": "History.dc.html",  "x": 1500, "y": 0, "w": 390, "h": 900, "title": "History" },
+    { "file": "Setup.dc.html",    "x": 2000, "y": 0, "w": 390, "h": 960, "title": "Setup" }
   ],
   "annotations": [
-    { "id": "model", "x": 500, "y": -210, "w": 390,
-      "text": "Every entry is one dated row: savings, what investments are worth now, and how much you added.\nPace = required per month to hit the target by its date, vs your actual average per month across the real elapsed days." },
-    { "id": "privacy", "x": 1500, "y": -210, "w": 390,
-      "text": "No account, no backend. Data is written to IndexedDB on the device.\nExport / import JSON is the only way it moves." }
+    { "id": "pace-math", "x": 500, "y": -230, "w": 390,
+      "text": "Big number leads, one split bar underneath.\nTeal = savings, amber = investments, against the two targets added together.\nPace compares what each target needs per month with what you have actually been averaging." },
+    { "id": "sheet-note", "x": 1000, "y": -230, "w": 390,
+      "text": "The + button floats over every tab. Tap it and this sheet slides up.\nThree numbers and you are done — the Log tab is gone, history moved to its own tab." },
+    { "id": "privacy", "x": 2000, "y": -230, "w": 390,
+      "text": "No account, no backend, no analytics. Data is written to IndexedDB on the device.\nExport / import JSON is the only way it moves between phones." }
   ],
   "launch": { "view": "canvas" }
 }
