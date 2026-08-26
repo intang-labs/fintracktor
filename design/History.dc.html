@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+      --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:var(--sans);font-size:16px;line-height:1.45;color:#131720;-webkit-font-smoothing:antialiased}
+    a{color:#0F8A7E}a:hover{color:#0B6C62}
+    .card{background:#FFFFFF;border-radius:20px;padding:16px;
+      box-shadow:0 1px 2px rgba(19,23,32,.04), 0 10px 28px -14px rgba(19,23,32,.22)}
+    .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#6E7684}
+    .num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+    .chip{font-family:var(--mono);font-size:10px;letter-spacing:.04em;padding:4px 9px;border-radius:999px;font-weight:600}
+    .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding-top:11px}
+    .tabl{font-size:10px;font-weight:600;letter-spacing:.03em}
+    .leg{display:flex;align-items:center;gap:6px;font-size:12px;color:#6E7684}
+    .dot{width:7px;height:7px;border-radius:50%;flex:none}
+  </style>
+</helmet>
+
+<div style="position:relative;width:390px;height:900px;background:#F2F4F7;padding:18px 14px 0;display:flex;flex-direction:column;gap:12px;overflow:hidden;">
+
+  <div style="display:flex;justify-content:space-between;align-items:baseline;padding:0 4px 2px;">
+    <div style="font-size:26px;font-weight:660;letter-spacing:-.03em;">History</div>
+    <div class="eyebrow">5 entries</div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span class="eyebrow">26 Aug 2026</span>
+      <span class="chip" style="background:rgba(201,122,22,.10);color:#C97A16;">+₹55,000</span>
+    </div>
+    <div class="num" style="font-size:22px;font-weight:600;margin-top:8px;">₹18,42,000</div>
+    <div style="display:flex;gap:16px;margin-top:8px;">
+      <span class="leg"><span class="dot" style="background:#0F8A7E;"></span><span class="num">₹6,42,000</span></span>
+      <span class="leg"><span class="dot" style="background:#C97A16;"></span><span class="num">₹12,00,000</span></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span class="eyebrow">26 Jul 2026</span>
+      <span class="chip" style="background:rgba(201,122,22,.10);color:#C97A16;">+₹55,000</span>
+    </div>
+    <div class="num" style="font-size:22px;font-weight:600;margin-top:8px;">₹17,16,000</div>
+    <div style="display:flex;gap:16px;margin-top:8px;">
+      <span class="leg"><span class="dot" style="background:#0F8A7E;"></span><span class="num">₹5,96,000</span></span>
+      <span class="leg"><span class="dot" style="background:#C97A16;"></span><span class="num">₹11,20,000</span></span>
+    </div>
+  </div>
+
+  <div style="position:relative;border-radius:20px;background:#C0392B;overflow:hidden;box-shadow:0 10px 28px -14px rgba(19,23,32,.22);">
+    <div style="position:absolute;right:0;top:0;bottom:0;width:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M7 7l1 13h8l1-13"/></svg>
+      <span style="color:#FFFFFF;font-size:11px;font-weight:600;">Delete</span>
+    </div>
+    <div style="background:#FFFFFF;border-radius:20px;padding:16px;transform:translateX(-92px);">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span class="eyebrow">24 Jun 2026</span>
+        <span class="chip" style="background:rgba(201,122,22,.10);color:#C97A16;">+₹50,000</span>
+      </div>
+      <div class="num" style="font-size:22px;font-weight:600;margin-top:8px;">₹16,32,000</div>
+      <div style="display:flex;gap:16px;margin-top:8px;">
+        <span class="leg"><span class="dot" style="background:#0F8A7E;"></span><span class="num">₹5,58,000</span></span>
+        <span class="leg"><span class="dot" style="background:#C97A16;"></span><span class="num">₹10,74,000</span></span>
+      </div>
+      <div style="margin-top:9px;font-size:12px;color:#6E7684;font-style:italic;">paid annual insurance</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span class="eyebrow">26 May 2026</span>
+      <span class="chip" style="background:rgba(201,122,22,.10);color:#C97A16;">+₹50,000</span>
+    </div>
+    <div class="num" style="font-size:22px;font-weight:600;margin-top:8px;">₹15,30,000</div>
+    <div style="display:flex;gap:16px;margin-top:8px;">
+      <span class="leg"><span class="dot" style="background:#0F8A7E;"></span><span class="num">₹5,20,000</span></span>
+      <span class="leg"><span class="dot" style="background:#C97A16;"></span><span class="num">₹10,10,000</span></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span class="eyebrow">25 Apr 2026</span>
+      <span class="chip" style="background:#F0F2F5;color:#6E7684;">first entry</span>
+    </div>
+    <div class="num" style="font-size:22px;font-weight:600;margin-top:8px;">₹14,30,000</div>
+    <div style="display:flex;gap:16px;margin-top:8px;">
+      <span class="leg"><span class="dot" style="background:#0F8A7E;"></span><span class="num">₹4,90,000</span></span>
+      <span class="leg"><span class="dot" style="background:#C97A16;"></span><span class="num">₹9,40,000</span></span>
+    </div>
+  </div>
+
+  <div style="position:absolute;right:18px;bottom:88px;width:60px;height:60px;border-radius:21px;background:#131720;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px -6px rgba(19,23,32,.5);">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;height:72px;background:rgba(255,255,255,.97);box-shadow:0 -1px 0 rgba(19,23,32,.05), 0 -10px 30px -18px rgba(19,23,32,.4);display:flex;padding-bottom:10px;">
+    <div class="tab" style="color:#A2AAB8;">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#A2AAB8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
+      <span class="tabl">Pace</span>
+    </div>
+    <div class="tab" style="color:#131720;">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#131720" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h9"/></svg>
+      <span class="tabl">History</span>
+    </div>
+    <div class="tab" style="color:#A2AAB8;">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#A2AAB8" stroke-width="2" stroke-linecap="round"><path d="M4 7h8M17 7h3M4 17h3M12 17h8"/><circle cx="14.5" cy="7" r="2.4"/><circle cx="8" cy="17" r="2.4"/></svg>
+      <span class="tabl">Setup</span>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

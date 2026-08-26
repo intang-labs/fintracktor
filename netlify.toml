@@ -1,0 +1,37 @@
+# Fintracktor is a static PWA — no build step, no bundler, no dependencies.
+# Netlify just serves the contents of public/ over HTTPS, which is all a
+# service worker needs to register.
+
+[build]
+  publish = "public"
+
+# The shell and the service worker must be revalidated on every request.
+# Without this a deploy can sit behind a stale copy on someone's phone for
+# as long as the cache lives, and the app never updates itself.
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Icons never change without changing name, so let them sit in the cache.
+[[headers]]
+  for = "/icons/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "no-referrer"

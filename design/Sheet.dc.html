@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+      --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:var(--sans);font-size:16px;line-height:1.45;color:#131720;-webkit-font-smoothing:antialiased}
+    a{color:#0F8A7E}a:hover{color:#0B6C62}
+    .card{background:#FFFFFF;border-radius:20px;padding:18px;
+      box-shadow:0 1px 2px rgba(19,23,32,.04), 0 10px 28px -14px rgba(19,23,32,.22)}
+    .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#6E7684}
+    .num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+    .fld{padding:12px 15px;border-radius:16px;background:#F5F6F9}
+    .fldl{font-size:11px;color:#6E7684;letter-spacing:.01em}
+  </style>
+</helmet>
+
+<div style="position:relative;width:390px;height:844px;background:#F2F4F7;overflow:hidden;">
+
+  <div style="padding:18px 14px 0;display:flex;flex-direction:column;gap:14px;filter:blur(1px);">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;">
+      <div style="display:flex;align-items:center;gap:9px;">
+      <span style="width:26px;height:26px;border-radius:9px;background:#0F8A7E;display:flex;align-items:center;justify-content:center;flex:none;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 16 10 10 14 14 20 7"/></svg>
+      </span>
+      <span style="font-size:17px;font-weight:660;letter-spacing:-.025em;">Fintracktor</span>
+    </div>
+      <div style="font-family:var(--mono);font-size:11px;color:#6E7684;background:#FFFFFF;padding:6px 11px;border-radius:999px;">26 AUG</div>
+    </div>
+    <div class="card" style="padding:20px;">
+      <div class="eyebrow">Net worth</div>
+      <div class="num" style="font-size:44px;font-weight:600;line-height:1.02;margin:8px 0 10px;">₹18,42,000</div>
+      <div style="display:flex;height:14px;border-radius:999px;background:#E9ECF1;overflow:hidden;margin-top:8px;">
+        <span style="width:21.4%;background:#0F8A7E;"></span>
+        <span style="width:40%;background:#C97A16;"></span>
+      </div>
+    </div>
+    <div class="card" style="height:150px;"></div>
+  </div>
+
+  <div style="position:absolute;inset:0;background:rgba(19,23,32,.42);"></div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;height:596px;background:#FFFFFF;border-radius:26px 26px 0 0;
+       box-shadow:0 -14px 40px -12px rgba(19,23,32,.4);padding:10px 18px 0;display:flex;flex-direction:column;">
+
+    <div style="width:38px;height:4px;border-radius:999px;background:#DCE0E7;margin:0 auto 14px;"></div>
+
+    <div style="display:flex;align-items:center;margin-bottom:16px;">
+      <span style="flex:1;font-size:20px;font-weight:660;letter-spacing:-.02em;">New entry</span>
+      <span style="width:32px;height:32px;border-radius:999px;background:#F0F2F5;display:flex;align-items:center;justify-content:center;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6E7684" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </span>
+    </div>
+
+    <div class="fld" style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6E7684" stroke-width="1.9" stroke-linecap="round" style="flex:none;"><rect x="3.5" y="5" width="17" height="16" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+      <span style="flex:1;font-size:15px;font-weight:600;">Today · 26 Aug 2026</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A2AAB8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:11px;">
+
+      <div style="padding:12px 15px;border-radius:16px;background:#FFFFFF;box-shadow:0 0 0 2px #0F8A7E;">
+        <div class="fldl" style="color:#0F8A7E;font-weight:600;">Savings — bank &amp; cash</div>
+        <div class="num" style="font-size:23px;font-weight:600;margin-top:3px;">₹6,42,000</div>
+      </div>
+
+      <div class="fld">
+        <div class="fldl">Investments — what they are worth now</div>
+        <div class="num" style="font-size:23px;font-weight:600;margin-top:3px;">₹12,00,000</div>
+      </div>
+
+      <div class="fld">
+        <div class="fldl">Added to investments since 26 Jul</div>
+        <div class="num" style="font-size:23px;font-weight:600;margin-top:3px;">₹55,000</div>
+      </div>
+
+      <div class="fld">
+        <div class="fldl">Note</div>
+        <div style="font-size:15px;color:#A2AAB8;margin-top:3px;">Optional — e.g. bonus landed</div>
+      </div>
+
+    </div>
+
+    <div style="margin-top:18px;padding:16px;border-radius:16px;background:#131720;color:#FFFFFF;font-size:16px;font-weight:600;text-align:center;">
+      Save entry
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:14px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A2AAB8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="4" y="10" width="16" height="10" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+      <span style="font-size:11px;color:#A2AAB8;">Saved on this device only</span>
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>
