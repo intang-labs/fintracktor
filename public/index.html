@@ -2,27 +2,213 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fintracktor</title>
-<style>
-  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-    background:#F2F4F7;color:#131720;
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
-  .box{text-align:center;padding:32px}
-  .mark{width:44px;height:44px;border-radius:15px;background:#0F8A7E;display:flex;
-    align-items:center;justify-content:center;margin:0 auto 18px}
-  h1{font-size:24px;font-weight:660;letter-spacing:-.03em;margin:0 0 8px}
-  p{font-size:14px;color:#6E7684;margin:0;line-height:1.55}
-</style>
+<meta name="description" content="Track savings and investments against a target, on your own device.">
+<meta name="theme-color" content="#F2F4F7">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/icons/icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Fintracktor">
+<link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <div class="box">
-    <div class="mark">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6"
+
+<header>
+  <div class="brand">
+    <span class="mark" aria-hidden="true">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6"
            stroke-linecap="round" stroke-linejoin="round"><polyline points="4 16 10 10 14 14 20 7"/></svg>
-    </div>
-    <h1>Fintracktor</h1>
-    <p>The pipeline is live. The app lands here on the next push.</p>
+    </span>
+    <span id="headTitle">Fintracktor</span>
   </div>
+  <div class="stamp" id="stamp"></div>
+</header>
+
+<main>
+  <section id="tab-pace" aria-label="Pace"></section>
+  <section id="tab-history" aria-label="History" hidden></section>
+
+  <section id="tab-setup" aria-label="Setup" hidden>
+    <div class="card">
+      <div class="track-head">
+        <span class="dot" style="background:var(--save)"></span>
+        <span class="name">Savings target</span>
+      </div>
+      <div class="pair" style="margin-top:13px">
+        <label class="fld wide">
+          <span class="lbl">Reach</span>
+          <input id="tSaveAmt" type="text" inputmode="decimal" placeholder="0" autocomplete="off">
+        </label>
+        <label class="fld">
+          <span class="lbl">By</span>
+          <input id="tSaveMonth" type="month">
+        </label>
+      </div>
+      <div id="saveTargetNote" class="note"></div>
+    </div>
+
+    <div class="card">
+      <div class="track-head">
+        <span class="dot" style="background:var(--invest)"></span>
+        <span class="name">Invested target</span>
+      </div>
+      <div class="pair" style="margin-top:13px">
+        <label class="fld wide">
+          <span class="lbl">Reach</span>
+          <input id="tInvAmt" type="text" inputmode="decimal" placeholder="0" autocomplete="off">
+        </label>
+        <label class="fld">
+          <span class="lbl">By</span>
+          <input id="tInvMonth" type="month">
+        </label>
+      </div>
+      <div id="invTargetNote" class="note"></div>
+    </div>
+
+    <div class="card">
+      <label class="fld" style="margin:0">
+        <span class="lbl">Currency</span>
+        <select id="tCur">
+          <option value="INR">₹  Indian rupee</option>
+          <option value="USD">$  US dollar</option>
+          <option value="EUR">€  Euro</option>
+          <option value="GBP">£  Pound sterling</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="card rows">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0 2px">
+        <span class="eyebrow">Export</span>
+        <span id="exportAge"></span>
+      </div>
+      <button class="row" id="btnCsvEntries">
+        <span class="tile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17"
+          height="15" rx="2.5"/><path d="M3.5 9.5h17M9.5 9.5v10"/></svg></span>
+        <span class="rt"><b>Entries as CSV</b><small>One row per entry — paste into a sheet</small></span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <button class="row" id="btnCsvSummary">
+        <span class="tile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20V11M12 20V4M18 20v-6"/></svg></span>
+        <span class="rt"><b>Summary as CSV</b><small>Targets and pace, for a second tab</small></span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <button class="row" id="btnJson">
+        <span class="tile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M8 11l4 4 4-4"/><path d="M5 19h14"/></svg></span>
+        <span class="rt"><b>Full backup as JSON</b><small>Everything, for moving to a new phone</small></span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+
+    <div class="card rows">
+      <div class="eyebrow" style="padding:8px 0 2px">Your data</div>
+      <button class="row" id="btnRestore">
+        <span class="tile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V8"/><path d="M8 12l4-4 4 4"/><path d="M5 19h14"/></svg></span>
+        <span class="rt"><b>Restore from a backup</b><small>Replaces what is here now</small></span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <button class="row danger" id="btnWipe">
+        <span class="tile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--over)"
+          stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M7 7l1 13h8l1-13"/></svg></span>
+        <span class="rt"><b>Erase everything</b><small>Cannot be undone</small></span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <input type="file" id="fileIn" accept="application/json,.json" hidden>
+    </div>
+
+    <p class="privacy">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--save)" stroke-width="1.9"
+        stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.4-3 8-7 9-4-1-7-4.6-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+      <span id="privacyNote">No account, no server, no analytics. Every figure is written to this device
+        and stays there until you export a file yourself.</span>
+    </p>
+  </section>
+</main>
+
+<button id="fab" aria-label="Add an entry">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"
+       stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+<nav>
+  <button data-tab="pace" aria-current="true">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
+    <span>Pace</span>
+  </button>
+  <button data-tab="history">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h9"/></svg>
+    <span>History</span>
+  </button>
+  <button data-tab="setup">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round"><path d="M4 7h8M17 7h3M4 17h3M12 17h8"/><circle cx="14.5" cy="7" r="2.4"/><circle cx="8" cy="17" r="2.4"/></svg>
+    <span>Setup</span>
+  </button>
+</nav>
+
+<div id="scrim"></div>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
+  <div class="grab"></div>
+  <div class="sheet-head">
+    <h2 id="sheetTitle">New entry</h2>
+    <button class="iconbtn" id="sheetClose" aria-label="Close">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.4"
+        stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+
+  <div class="datebtn">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.9"
+      stroke-linecap="round"><rect x="3.5" y="5" width="17" height="16" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+    <span class="txt" id="dateLabel"></span>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="2.2"
+      stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    <input type="date" id="fDate" aria-label="Entry date">
+  </div>
+
+  <label class="fld">
+    <span class="lbl">Savings — bank &amp; cash</span>
+    <input id="fSave" type="text" inputmode="decimal" placeholder="0" autocomplete="off">
+  </label>
+
+  <label class="fld">
+    <span class="lbl">Invested — total you have put in</span>
+    <input id="fInv" type="text" inputmode="decimal" placeholder="0" autocomplete="off">
+    <span class="hint" id="invHint"></span>
+  </label>
+
+  <label class="fld text">
+    <span class="lbl">Note</span>
+    <input id="fNote" type="text" placeholder="Optional — e.g. bonus landed" autocomplete="off" maxlength="80">
+  </label>
+
+  <button class="primary" id="saveEntry">Save entry</button>
+
+  <p class="sheet-foot">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9"
+      stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+    Saved on this device only
+  </p>
+</div>
+
+<div id="toast"><span class="msg"></span><button hidden></button></div>
+
+<script src="/app.js"></script>
 </body>
 </html>

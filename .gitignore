@@ -1,5 +1,6 @@
-# Generated design canvas bundle (rebuilt from design/*.dc.html + canvas.json)
-design/fintracktor.html
-
 node_modules/
 .DS_Store
+
+# Generated design canvas bundle (rebuilt from design/*.dc.html + canvas.json)
+design/fintracktor.html
+tools/shot-*.png
