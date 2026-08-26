@@ -8,7 +8,7 @@
   ],
   "annotations": [
     { "id": "pace-math", "x": 500, "y": -230, "w": 390,
-      "text": "Big number leads, one split bar underneath.\nTeal = savings, amber = investments, against the two targets added together.\nPace compares what each target needs per month with what you have actually been averaging." },
+      "text": "Big number leads, one split bar underneath \u2014 teal savings, amber investments, against both targets added together.\nThe month-end card below it is the motivator: the far-off target divided by the months left gives a figure for THIS month,\nand the bar fills as you close the gap. Derived, never typed in \u2014 it moves when the target or the months left move." },
     { "id": "sheet-note", "x": 1000, "y": -230, "w": 390,
       "text": "The + button floats over every tab. Tap it and this sheet slides up.\nThree numbers and you are done — the Log tab is gone, history moved to its own tab." },
     { "id": "privacy", "x": 2000, "y": -230, "w": 390,
