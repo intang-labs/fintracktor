@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+      --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:var(--sans);font-size:16px;line-height:1.45;color:#131720}
+    a{color:#0F8A7E}a:hover{color:#0B6C62}
+    .card{background:#FFFFFF;border:1px solid #DFE3E9;border-radius:14px;padding:16px}
+    .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B7482}
+    .num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  </style>
+</helmet>
+
+<div style="position:relative;width:390px;height:844px;background:#F0F2F5;padding:16px 14px 0;display:flex;flex-direction:column;gap:12px;overflow:hidden;">
+
+  <div style="display:flex;justify-content:space-between;align-items:baseline;">
+    <div style="font-size:15px;font-weight:620;letter-spacing:-.01em;">Balance<span style="color:#0F8A7E">·</span>Pace</div>
+    <div class="eyebrow">NO DATA</div>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">Net worth</div>
+    <span class="num" style="font-size:40px;font-weight:600;line-height:1.05;display:block;margin:6px 0 2px;color:#A6AEBB;">₹0</span>
+    <div style="margin-top:14px;height:34px;border-radius:8px;background:linear-gradient(90deg,#E8EDF0,#F6F8FA);border:1px solid #DFE3E9;"></div>
+    <div style="margin-top:12px;font-size:13px;line-height:1.5;padding:10px 12px;border-radius:10px;background:#F3F6F8;border:1px solid #DFE3E9;color:#6B7482;">
+      Two things to do, then this screen fills itself in.
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:flex-start;gap:12px;">
+      <span class="num" style="width:24px;height:24px;border-radius:50%;background:#131720;color:#FFFFFF;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">1</span>
+      <span style="flex:1;">
+        <span style="display:block;font-size:15px;font-weight:600;">Set your two targets</span>
+        <span style="display:block;font-size:13px;color:#6B7482;">How much in savings, how much invested, and by when.</span>
+      </span>
+    </div>
+    <div style="margin:12px 0 0 36px;padding:11px 14px;border-radius:10px;background:#131720;color:#FFFFFF;font-size:14px;font-weight:600;text-align:center;">Set targets</div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:flex-start;gap:12px;">
+      <span class="num" style="width:24px;height:24px;border-radius:50%;background:#FFFFFF;border:1px solid #DFE3E9;color:#6B7482;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">2</span>
+      <span style="flex:1;">
+        <span style="display:block;font-size:15px;font-weight:600;">Log where you stand today</span>
+        <span style="display:block;font-size:13px;color:#6B7482;">Bank balance and what your investments are worth. Two numbers, ten seconds.</span>
+      </span>
+    </div>
+    <div style="margin:12px 0 0 36px;padding:11px 14px;border-radius:10px;background:#FFFFFF;border:1px solid #DFE3E9;font-size:14px;font-weight:600;text-align:center;color:#131720;">Log first entry</div>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:9px;padding:2px 4px;">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6B7482" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px;"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+    <span style="font-size:12px;color:#6B7482;line-height:1.5;">
+      No sign-up, no server. Your figures are written to this device and stay there.
+    </span>
+  </div>
+
+  <div style="position:absolute;left:12px;right:12px;bottom:80px;background:#131720;color:#FFFFFF;padding:12px 14px;border-radius:12px;font-size:13px;display:flex;align-items:center;gap:10px;">
+    <span style="flex:1;">Install it: tap <b>Share</b>, then <b>Add to Home Screen</b>.</span>
+    <span style="color:#8A94A6;font-size:20px;line-height:1;">×</span>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;display:flex;background:rgba(255,255,255,.94);border-top:1px solid #DFE3E9;">
+    <div style="flex:1;padding:14px 4px 16px;text-align:center;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#131720;box-shadow:inset 0 2px 0 #131720;">Pace</div>
+    <div style="flex:1;padding:14px 4px 16px;text-align:center;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6B7482;">Log</div>
+    <div style="flex:1;padding:14px 4px 16px;text-align:center;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6B7482;">Setup</div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

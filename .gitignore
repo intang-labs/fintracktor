@@ -1,0 +1,5 @@
+# Generated design canvas bundle (rebuilt from design/*.dc.html + canvas.json)
+design/balance-pace.html
+
+node_modules/
+.DS_Store
