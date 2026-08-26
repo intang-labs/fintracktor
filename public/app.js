@@ -769,8 +769,11 @@ function renderAll() {
 
 /* ── service worker: offline, plus a prompt when a deploy lands ────────── */
 if ('serviceWorker' in navigator) {
-  let reloading = false;
+  // The first worker claims the page on install, which is not an update — only
+  // reload when a worker replaces one that was already in charge.
+  let hadWorker = !!navigator.serviceWorker.controller, reloading = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadWorker) { hadWorker = true; return; }
     if (reloading) return; reloading = true; location.reload();
   });
   addEventListener('load', async () => {

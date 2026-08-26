@@ -1,6 +1,6 @@
-/* Cache-first for the shell so the app opens offline. The version string is
-   what makes a deploy take effect: bump it and the old cache is dropped. */
-const VERSION = 'v1';
+/* Offline support for a site with no build step.
+   Bump VERSION to drop every cached response from an older release. */
+const VERSION = 'v2';
 const CACHE = `fintracktor-${VERSION}`;
 const SHELL = [
   '/', '/index.html', '/styles.css', '/app.js', '/manifest.webmanifest',
@@ -23,34 +23,39 @@ self.addEventListener('message', e => {
   if (e.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
+const shellKey = request => (request.mode === 'navigate' ? '/index.html' : request);
+
+/* The network decides what the code is; the cache is the offline fallback. */
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE);
+  const key = shellKey(request);
+  try {
+    const fresh = await fetch(request);
+    if (fresh.ok) cache.put(key, fresh.clone());
+    return fresh;
+  } catch {
+    return (await cache.match(key)) || Response.error();
+  }
+}
+
+/* Only for responses that cannot go stale in a way that matters. */
+async function cacheFirst(request) {
+  const hit = await caches.match(request);
+  if (hit) return hit;
+  const fresh = await fetch(request);
+  if (fresh.ok) (await caches.open(CACHE)).put(request, fresh.clone());
+  return fresh;
+}
+
 self.addEventListener('fetch', e => {
   const { request } = e;
-  if (request.method !== 'GET' || new URL(request.url).origin !== location.origin) return;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+  if (url.origin !== location.origin) return;
 
-  // Navigations go to the network first, so a deploy is picked up on the next
-  // open rather than waiting for the cache to expire; the shell is the fallback.
-  if (request.mode === 'navigate') {
-    e.respondWith((async () => {
-      try {
-        const fresh = await fetch(request);
-        (await caches.open(CACHE)).put('/index.html', fresh.clone());
-        return fresh;
-      } catch {
-        return (await caches.match('/index.html')) || Response.error();
-      }
-    })());
-    return;
-  }
-
-  e.respondWith((async () => {
-    const hit = await caches.match(request);
-    if (hit) return hit;
-    try {
-      const fresh = await fetch(request);
-      if (fresh.ok) (await caches.open(CACHE)).put(request, fresh.clone());
-      return fresh;
-    } catch {
-      return Response.error();
-    }
-  })());
+  // Icons change only by changing name, so the cache is safe to trust.
+  // Everything else is markup, code or styling, and serving a cached copy of
+  // those pins an installed app to whatever shipped first: new HTML would run
+  // against old JavaScript, which is how the Add/Total switch arrived dead.
+  e.respondWith(url.pathname.startsWith('/icons/') ? cacheFirst(request) : networkFirst(request));
 });

@@ -77,15 +77,25 @@ npm run icons   # re-render the PNG icons from the vector mark
 ## Deploying
 
 Netlify serves `public/` straight from the repository — see `netlify.toml`. There
-is no build command. The shell, the service worker and the manifest are set to
-revalidate on every request so a deploy is not left sitting behind a stale cache
-on an installed phone; icons are immutable and cached for a year.
+is no build command.
 
-When a deploy lands on a phone that already has the app open, the service worker
-notices and offers a **Reload** prompt rather than swapping the page underneath you.
+Getting a deploy onto an already-installed phone is the fiddly part, so it is
+worth being explicit. The service worker treats `/icons/` as cache-first, since
+those change only by changing name, and **everything else network-first**: the
+network decides what the code is, and the cache is the offline fallback. Serving
+markup, JavaScript or CSS from the cache would pin an installed app to whatever
+shipped first — new HTML running against old code, which is a real bug this
+project has already shipped once.
 
-To cut a release, bump `VERSION` in `public/sw.js` — that is what drops the old
-cache.
+`netlify.toml` backs that up with `must-revalidate` on the shell, the worker, the
+manifest, `app.js` and `styles.css`; icons are immutable and cached for a year.
+When a new worker replaces one already in charge, the page offers a **Reload**
+prompt rather than swapping itself underneath you mid-entry.
+
+Bumping `VERSION` in `public/sw.js` drops every response cached by an older
+release. With network-first that is a belt-and-braces measure rather than a
+requirement, but it is still the right thing to do when a release changes the
+shape of what is cached.
 
 ## Layout
 
