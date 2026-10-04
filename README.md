@@ -98,18 +98,39 @@ In the Shortcuts app, make one called *Log expense*:
 
 Then **Settings → Accessibility → Touch → Back Tap → Double Tap** and pick it.
 
-### One caveat worth testing first
+### Which copy of the app does that open?
 
-iOS gives a home-screen web app its own storage, separate from Safari. If
-Shortcuts' *Open URLs* lands in Safari rather than the installed app, the expense
-is written to a copy of Fintracktor that has none of your data.
+This is the part to settle before relying on any of it.
 
-Check before relying on it: open the app from your home screen and confirm your
-entries are there, then visit the same URL in Safari. **If Safari shows the
-first-run screen, storage is partitioned** and the URL route reaches only the
-Safari copy. The fallback is to have the Shortcut copy the amount to the
-clipboard and use *Open App*, pasting it in the sheet — one more tap, but it
-reaches the right storage.
+**`Open URLs` hands the URL to the default browser.** iOS does not route a URL
+into an installed home-screen web app the way Android does, so that step opens
+Safari — not the icon on your home screen. Whether that matters comes down to one
+question: **does Safari share storage with the installed app?** Historically iOS
+has given a home-screen web app its own container, which would mean the expense
+lands in a copy of Fintracktor holding none of your data.
+
+Two checks, in this order.
+
+**1. Can a Shortcut open the installed app at all?** (15 seconds) In Shortcuts,
+add an **Open App** action and search for Fintracktor. Home-screen web apps are
+WebClips rather than real apps, and whether they appear in that picker is the
+pivotal unknown here — it has varied by iOS version and is not something this
+repository can test.
+
+**2. Do the two share storage?** (30 seconds) Open Fintracktor from the home
+screen and confirm your entries are there, then visit the same URL in Safari. **A
+first-run screen in Safari means the storage is separate.**
+
+What the answers mean:
+
+| Open App lists it | Shared storage | What works |
+| --- | --- | --- |
+| — | yes | The recipe above, exactly as written |
+| yes | no | Back tap opens the real app, but **Open App takes no parameter** — so type the amount there, or have the Shortcut copy it to the clipboard and paste |
+| no | no | A Shortcut cannot reach the installed app. Either use Fintracktor in Safari, where the recipe works end to end, or keep it installed and open it yourself |
+
+The last row is the honest worst case: the back tap would still be a two-tap way
+to *reach* the app, but not to carry the amount into it.
 
 ## Where the data lives
 
