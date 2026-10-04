@@ -45,9 +45,11 @@ async function writeDoc(doc) {
 
 /* ── state ─────────────────────────────────────────────────────────────── */
 const blank = () => ({
-  v: 1,
-  entries: [],
+  v: 2,
+  entries: [],        // monthly savings / invested snapshots
+  expenses: [],       // { id, date, amount, cat, note }
   targets: { savings: { amount: 0, month: '' }, invested: { amount: 0, month: '' } },
+  budget: 0,          // monthly spending cap, 0 = none set
   currency: 'INR',
   lastExport: null,
 });
@@ -79,10 +81,10 @@ const fmtShort = s => parseISO(s).toLocaleDateString(undefined, { day: 'numeric'
 const fmtMonth = ym => new Date(Number(ym.slice(0, 4)), Number(ym.slice(5, 7)) - 1, 1)
   .toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
 
-function endOfMonth() {
-  const d = new Date();
-  return new Date(d.getFullYear(), d.getMonth() + 1, 0);
+function endOfMonthOf(ym) {
+  return new Date(Number(ym.slice(0, 4)), Number(ym.slice(5, 7)), 0);
 }
+const endOfMonth = () => endOfMonthOf(thisMonth());
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 /* ── the maths ─────────────────────────────────────────────────────────── */
@@ -148,7 +150,10 @@ function renderPace() {
   const el = document.getElementById('tab-pace');
   const list = sorted();
 
-  if (!list.length) { el.innerHTML = firstRun(); return; }
+  // Someone can track spending before they ever log a balance, so the
+  // spending card has to survive the empty-entries case rather than be
+  // replaced wholesale by the first-run steps.
+  if (!list.length) { el.innerHTML = spendCard() + firstRun(); return; }
 
   const s = track(list, 'savings'), i = track(list, 'invested');
   const last = list.at(-1), prev = list.at(-2);
@@ -186,7 +191,7 @@ function renderPace() {
   }
   hero += `</div>`;
 
-  el.innerHTML = hero + monthCard(s, i) + trackCard(s, 'Savings', 'save')
+  el.innerHTML = hero + monthCard(s, i) + spendCard() + trackCard(s, 'Savings', 'save')
     + trackCard(i, 'Invested', 'invest') + chartCard(list);
 
   el.querySelectorAll('.seg button').forEach(b => b.onclick = () => { range = b.dataset.r; renderPace(); });
@@ -367,15 +372,21 @@ function chartCard(all) {
 function renderHistory() {
   const el = document.getElementById('tab-history');
   const list = sorted().reverse();
+  const addBtn = `<button class="addrow" id="newEntry">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"
+      stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    New balance entry
+  </button>`;
   if (!list.length) {
-    el.innerHTML = `<h1 class="page-title">History</h1>
-      <div class="card"><p class="empty">Nothing logged yet. Tap <b>+</b> to start.</p></div>`;
+    el.innerHTML = `<h1 class="page-title">History</h1>${addBtn}
+      <div class="card"><p class="empty">No savings or investment entries yet.</p></div>`;
+    el.querySelector('#newEntry').onclick = () => openSheet(null);
     return;
   }
   el.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:baseline;margin:0 4px 14px">
       <h1 class="page-title" style="margin:0">History</h1>
       <span class="eyebrow">${list.length} ${list.length === 1 ? 'entry' : 'entries'}</span>
-    </div>` + list.map((e, n) => {
+    </div>` + addBtn + list.map((e, n) => {
     const next = list[n + 1];
     const added = next ? e.invested - next.invested : null;
     return `<div class="swipe" data-id="${esc(e.id)}">
@@ -401,6 +412,7 @@ function renderHistory() {
     </div>`;
   }).join('');
 
+  el.querySelector('#newEntry').onclick = () => openSheet(null);
   el.querySelectorAll('[data-del]').forEach(b => b.onclick = async ev => {
     ev.stopPropagation();
     const e = state.entries.find(x => x.id === b.dataset.del);
@@ -456,6 +468,18 @@ function renderSetup() {
       <span class="num" style="font-weight:600">${money(d.perMonth)}</span> a month${
       key === 'invested' ? ' of your own money' : ''}.`;
   }
+  const cap = document.getElementById('tBudget');
+  if (document.activeElement !== cap) cap.value = state.budget ? group(state.budget) : '';
+  const capNote = document.getElementById('budgetNote');
+  if (!state.budget) {
+    capNote.textContent = 'No cap set. Spending is still recorded, just not measured against anything.';
+  } else {
+    const b = budgetPace(thisMonth());
+    capNote.innerHTML = `<span class="num" style="font-weight:600">${money(state.budget / 30.44)}</span> a day.
+      This month you are at <span class="num" style="font-weight:600">${money(b.spent)}</span>` +
+      (b.over ? `, <span class="num" style="font-weight:600">${money(b.spent - b.cap)}</span> over.`
+              : `, with <span class="num" style="font-weight:600">${money(b.left)}</span> left.`);
+  }
   document.getElementById('tCur').value = state.currency;
 
   const age = document.getElementById('exportAge');
@@ -463,6 +487,305 @@ function renderSetup() {
   const n = days(state.lastExport, todayISO());
   age.className = 'chip ' + (n >= 30 ? 'warn' : 'flat');
   age.textContent = n === 0 ? 'today' : n === 1 ? 'yesterday' : `${n} days ago`;
+}
+
+/* ── spending ──────────────────────────────────────────────────────────
+   Expenses are a separate record from the savings balance. The balance is
+   still typed in by hand; nothing here adjusts it. Miss an expense and the
+   balance is still right — the two are never reconciled, so neither can
+   contradict the other. */
+const FIXED_CATS = ['Food', 'Transport', 'Bills', 'Shopping', 'Health'];
+
+function normCat(raw) {
+  const s = String(raw || '').replace(/\s+/g, ' ').trim().slice(0, 24);
+  if (!s) return 'Other';
+  const fixed = FIXED_CATS.find(c => c.toLowerCase() === s.toLowerCase());
+  if (fixed) return fixed;
+  if (s.toLowerCase() === 'other') return 'Other';
+  return s[0].toUpperCase() + s.slice(1);
+}
+
+const xSorted = () => [...state.expenses].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+const monthOf = ym => state.expenses.filter(e => e.date.slice(0, 7) === ym);
+const sumX = list => list.reduce((n, e) => n + e.amount, 0);
+
+/* Labels typed under Other, in order of first use — so a chip keeps its
+   place as history grows rather than reshuffling alphabetically. */
+function customCats() {
+  const seen = [];
+  for (const e of xSorted()) {
+    if (!FIXED_CATS.includes(e.cat) && e.cat !== 'Other' && !seen.includes(e.cat)) seen.push(e.cat);
+  }
+  return seen;
+}
+
+function breakdown(ym) {
+  const list = monthOf(ym), total = sumX(list);
+  const by = new Map();
+  for (const e of list) by.set(e.cat, (by.get(e.cat) || 0) + e.amount);
+  return [...by.entries()]
+    .map(([cat, amount]) => ({ cat, amount, pct: total ? (amount / total) * 100 : 0 }))
+    .sort((a, b) => b.amount - a.amount);
+}
+
+function budgetPace(ym) {
+  const cap = Number(state.budget) || 0;
+  const spent = sumX(monthOf(ym));
+  const live = ym === thisMonth();
+  const end = endOfMonthOf(ym);
+  const span = end.getDate();
+  const elapsed = live ? Math.min(span, new Date().getDate()) : span;
+  const daysLeft = live ? Math.max(0, days(todayISO(), iso(end))) : 0;
+  const projected = elapsed > 0 ? (spent / elapsed) * span : spent;
+  return {
+    cap, spent, live, daysLeft, projected,
+    left: Math.max(0, cap - spent),
+    over: cap > 0 && spent > cap,
+    perDay: cap > 0 && daysLeft > 0 ? Math.max(0, cap - spent) / daysLeft : null,
+    onTrack: cap > 0 ? projected <= cap : null,
+    pct: cap > 0 ? clamp(spent / cap, 0, 1) : 0,
+  };
+}
+
+/* The spending card on Pace, mirroring how the savings target reads. */
+function spendCard() {
+  const ym = thisMonth(), b = budgetPace(ym);
+  if (!b.cap && !b.spent) return '';
+  const eom = endOfMonth().toLocaleDateString(undefined, { day: 'numeric', month: 'long' });
+
+  if (!b.cap) {
+    return `<div class="card">
+      <div class="eyebrow">Spent this month</div>
+      <span class="num total" style="font-size:30px;display:block;margin:8px 0 0">${money(b.spent)}</span>
+      <div class="note">Set a monthly cap in <b>Setup</b> to see whether you are on track to stay under it.</div>
+    </div>`;
+  }
+  const verdict = b.over
+    ? `Over by <span class="num" style="font-weight:600">${money(b.spent - b.cap)}</span>.`
+    : b.onTrack
+      ? `On track to finish under.`
+      : `At this rate you will finish around <span class="num" style="font-weight:600">${money(b.projected)}</span>.`;
+  return `<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <span class="eyebrow">Spending by ${esc(eom)}</span>
+      <span class="chip ${b.daysLeft <= 7 ? 'warn' : 'flat'}">${b.daysLeft === 0 ? 'Last day' : b.daysLeft + ' days left'}</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:9px;margin-top:11px">
+      <span class="num month-target">${money(b.spent)}</span>
+      <span class="num" style="font-size:13px;color:var(--muted)">of ${money(b.cap)}</span>
+    </div>
+    <div class="bart" style="height:12px"><span class="barf"
+      style="width:${(b.pct * 100).toFixed(1)}%;background:var(--${b.over ? 'over' : 'invest'})"></span></div>
+    <div class="foot" style="margin-top:9px">
+      <span>${b.over ? 'Cap passed' : `<b>${money(b.left)}</b> left`}</span>
+      ${b.perDay !== null && !b.over
+        ? `<span class="num" style="font-weight:600">${money(b.perDay)}/DAY</span>` : ''}
+    </div>
+    <div class="month-done ${b.over || b.onTrack === false ? 'warn' : ''}">
+      ${b.over || b.onTrack === false
+        ? `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--invest)" stroke-width="2.2"
+             stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><path d="M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg>`
+        : `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--save)" stroke-width="2.4"
+             stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`}
+      <span style="flex:1">${verdict}</span>
+    </div>
+  </div>`;
+}
+
+/* ── render: spend ─────────────────────────────────────────────────────── */
+let spendMonth = null;   // null means the current month
+
+function renderSpend() {
+  const el = document.getElementById('tab-spend');
+  const ym = spendMonth || thisMonth();
+  const b = budgetPace(ym);
+  const list = monthOf(ym).sort((a, b2) => (a.date < b2.date ? 1 : a.date > b2.date ? -1 : 0));
+  const months = [...new Set(state.expenses.map(e => e.date.slice(0, 7)))].sort();
+  const earliest = months.length ? monthIdx(months[0]) : nowMonthIdx();
+  const here = monthIdx(ym);
+
+  const chev = d => `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--ink)"
+    stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M${d < 0 ? '14 6l-6 6 6 6' : '10 6l6 6-6 6'}"/></svg>`;
+
+  let html = `<div class="monthnav">
+    <h1>${esc(fmtMonth(ym))}</h1>
+    <button id="mPrev" aria-label="Previous month" ${here <= earliest ? 'disabled' : ''}>${chev(-1)}</button>
+    <button id="mNext" aria-label="Next month" ${here >= nowMonthIdx() ? 'disabled' : ''}>${chev(1)}</button>
+  </div>`;
+
+  html += `<div class="card">
+    <div class="eyebrow">${b.live ? 'Spent so far' : 'Spent'}</div>
+    <span class="num spend-total">${money(b.spent)}</span>`;
+  if (b.cap) {
+    html += `<div class="bart" style="height:12px"><span class="barf"
+        style="width:${(b.pct * 100).toFixed(1)}%;background:var(--${b.over ? 'over' : 'invest'})"></span></div>
+      <div class="foot">
+        <span>of <b>${money(b.cap)}</b></span>
+        <span class="num" style="color:var(--${b.over ? 'over' : 'save'});font-weight:600">${
+          b.over ? money(b.spent - b.cap).toUpperCase() + ' OVER' : money(b.left).toUpperCase() + ' LEFT'}</span>
+      </div>`;
+  } else {
+    html += `<div class="foot"><span>${list.length} ${list.length === 1 ? 'expense' : 'expenses'}</span></div>`;
+  }
+  html += `</div>`;
+
+  const bd = breakdown(ym);
+  if (bd.length) {
+    const top = bd[0].amount || 1;
+    html += `<div class="card">
+      <div class="eyebrow" style="margin-bottom:14px">Where it went</div>
+      <div class="bd">${bd.map(r => `<div class="bd-row">
+        <div class="bd-top">
+          <span class="bd-name">${esc(r.cat)}</span>
+          <span class="num bd-amt">${money(r.amount)}</span>
+          <span class="bd-pct">${Math.round(r.pct)}%</span>
+        </div>
+        <div class="bd-track"><span class="bd-fill" style="width:${((r.amount / top) * 100).toFixed(1)}%"></span></div>
+      </div>`).join('')}</div>
+    </div>`;
+  }
+
+  if (!list.length) {
+    html += `<div class="card"><p class="empty">Nothing logged ${b.live ? 'this month' : 'that month'} yet.
+      Tap <b>+</b> to add one.</p></div>`;
+  } else {
+    html += `<div class="eyebrow" style="margin:18px 4px 10px">All ${list.length}</div>`;
+    html += list.map(e => `<div class="swipe" data-id="${esc(e.id)}">
+      <button class="del" data-xdel="${esc(e.id)}" aria-label="Delete this expense">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9"
+          stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M7 7l1 13h8l1-13"/></svg>
+        Delete
+      </button>
+      <button class="face xrow" data-xedit="${esc(e.id)}">
+        <span class="xcat">${esc(e.cat)}</span>
+        <span class="xmid"><b>${money(e.amount)}</b>${e.note ? `<small>${esc(e.note)}</small>` : ''}</span>
+        <span class="xday">${esc(parseISO(e.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }).toUpperCase())}</span>
+      </button>
+    </div>`).join('');
+  }
+
+  el.innerHTML = html;
+
+  const prev = el.querySelector('#mPrev'), next = el.querySelector('#mNext');
+  if (prev) prev.onclick = () => { spendMonth = shiftMonth(ym, -1); renderSpend(); };
+  if (next) next.onclick = () => { spendMonth = shiftMonth(ym, 1); renderSpend(); };
+  el.querySelectorAll('[data-xdel]').forEach(btn => btn.onclick = async ev => {
+    ev.stopPropagation();
+    const x = state.expenses.find(e => e.id === btn.dataset.xdel);
+    if (!confirm(`Delete ${money(x.amount)} on ${x.cat}?`)) return;
+    state.expenses = state.expenses.filter(e => e.id !== btn.dataset.xdel);
+    await save(); renderAll();
+  });
+  el.querySelectorAll('[data-xedit]').forEach(btn => btn.onclick = () => {
+    const row = btn.closest('.swipe');
+    if (row.classList.contains('open')) { row.classList.remove('open'); return; }
+    openExpense(btn.dataset.xedit);
+  });
+  attachSwipe(el);
+}
+
+function shiftMonth(ym, by) {
+  const n = monthIdx(ym) + by;
+  const out = `${Math.floor(n / 12)}-${String((n % 12) + 1).padStart(2, '0')}`;
+  return out === thisMonth() ? null : out;
+}
+
+/* ── the expense sheet ─────────────────────────────────────────────────── */
+const xsheet = document.getElementById('xsheet');
+let xediting = null, xcat = FIXED_CATS[0];
+
+function renderCats() {
+  const box = document.getElementById('xCats');
+  const other = document.getElementById('xCatOther');
+  const known = customCats();
+  const isOther = !FIXED_CATS.includes(xcat);
+  box.innerHTML = [...FIXED_CATS, ...known].map(c =>
+    `<button type="button" data-cat="${esc(c)}" aria-pressed="${String(c === xcat)}">${esc(c)}</button>`).join('')
+    + `<button type="button" data-cat="__other" aria-pressed="${String(isOther && !known.includes(xcat))}">Other…</button>`;
+  box.querySelectorAll('button').forEach(b => b.onclick = () => {
+    if (b.dataset.cat === '__other') {
+      xcat = 'Other';
+      other.hidden = false; renderCats(); other.focus();
+    } else {
+      xcat = b.dataset.cat; other.hidden = true; other.value = ''; renderCats();
+    }
+  });
+  if (!other.hidden && isOther && !known.includes(xcat)) other.hidden = false;
+}
+
+function openExpense(id, preset) {
+  xediting = id ? state.expenses.find(e => e.id === id) : null;
+  const other = document.getElementById('xCatOther');
+  document.getElementById('xsheetTitle').textContent = xediting ? 'Edit expense' : 'New expense';
+  document.getElementById('xSave').textContent = xediting ? 'Save changes' : 'Save expense';
+  document.getElementById('xAmt').value = xediting ? group(xediting.amount) : '';
+  document.getElementById('xDate').value = xediting ? xediting.date : todayISO();
+  document.getElementById('xNote').value = xediting ? (xediting.note || '') : (preset?.note || '');
+  xcat = xediting ? xediting.cat : (preset?.cat || FIXED_CATS[0]);
+  const custom = !FIXED_CATS.includes(xcat) && !customCats().includes(xcat);
+  other.hidden = !custom;
+  other.value = custom && xcat !== 'Other' ? xcat : '';
+  renderCats(); syncXDate();
+
+  xsheet.hidden = false;
+  requestAnimationFrame(() => { scrim.classList.add('on'); xsheet.classList.add('on'); });
+  setTimeout(() => document.getElementById('xAmt').focus({ preventScroll: true }), 340);
+}
+function closeExpense() {
+  scrim.classList.remove('on'); xsheet.classList.remove('on');
+  setTimeout(() => { xsheet.hidden = true; xediting = null; }, 320);
+}
+function syncXDate() {
+  const v = document.getElementById('xDate').value || todayISO();
+  document.getElementById('xDateLabel').textContent = (v === todayISO() ? 'Today · ' : '') + fmtDay(v);
+}
+document.getElementById('xDate').onchange = syncXDate;
+document.getElementById('xsheetClose').onclick = closeExpense;
+
+document.getElementById('xSave').onclick = async () => {
+  const amount = readMoney('xAmt');
+  if (!(amount > 0)) { toast('Enter an amount.'); return; }
+  const typed = document.getElementById('xCatOther');
+  const cat = normCat(!typed.hidden && typed.value.trim() ? typed.value : xcat);
+  const date = document.getElementById('xDate').value || todayISO();
+  const note = document.getElementById('xNote').value.trim();
+
+  if (xediting) {
+    Object.assign(xediting, { amount, cat, date, note });
+    await save(); closeExpense(); renderAll(); toast('Expense updated.');
+  } else {
+    closeExpense();
+    await addExpense({ date, amount, cat, note });
+  }
+};
+
+/* Undo matters more than usual here: a back tap can fire by accident. */
+async function addExpense(x) {
+  const id = crypto.randomUUID();
+  state.expenses.push({ id, ...x });
+  await save(); renderAll(); go('spend');
+  toast(`${money(x.amount)} logged to ${x.cat}.`, 'Undo', async () => {
+    state.expenses = state.expenses.filter(e => e.id !== id);
+    await save(); renderAll(); toast('Removed.');
+  }, 7000);
+}
+
+/* ── quick add from a URL ──────────────────────────────────────────────
+   An iOS Shortcut cannot write to this app's storage, so the Back Tap route
+   is: Shortcut asks for the amount, opens /?spend=250&cat=food, and this
+   reads it on launch. The parameter is stripped before anything is saved,
+   so a refresh can never log the same expense twice. */
+function quickAdd() {
+  const q = new URLSearchParams(location.search);
+  if (!q.has('spend')) return;
+  const raw = q.get('spend');
+  const cat = normCat(q.get('cat') || 'Other');
+  const note = String(q.get('note') || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+  history.replaceState({}, '', location.pathname);
+
+  const amount = Math.round(Number(String(raw).replace(/[^\d.]/g, '')) || 0);
+  if (!(amount > 0)) { go('spend'); openExpense(null, { cat, note }); return; }
+  addExpense({ date: todayISO(), amount, cat, note });
 }
 
 /* ── the sheet ─────────────────────────────────────────────────────────── */
@@ -558,10 +881,11 @@ document.getElementById('invMode').addEventListener('click', e => {
   syncInvUI();
 });
 
-document.getElementById('fab').onclick = () => openSheet(null);
+document.getElementById('fab').onclick = () => openExpense(null);
 document.getElementById('sheetClose').onclick = closeSheet;
-scrim.onclick = closeSheet;
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && !sheet.hidden) closeSheet(); });
+const closeAnySheet = () => { if (!sheet.hidden) closeSheet(); if (!xsheet.hidden) closeExpense(); };
+scrim.onclick = closeAnySheet;
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAnySheet(); });
 document.getElementById('fDate').onchange = () => { syncDateLabel(); syncInvUI(); };
 document.getElementById('fInv').addEventListener('input', syncInvUI);
 
@@ -596,25 +920,24 @@ document.getElementById('saveEntry').onclick = async () => {
   toast(editing ? 'Entry updated.' : 'Entry saved.');
 };
 
-/* Drag the sheet down to dismiss. */
-(() => {
+/* Drag a sheet down to dismiss it. */
+function dragToDismiss(el, close) {
   let y0 = null;
-  const head = sheet.querySelector('.sheet-head'), grab = sheet.querySelector('.grab');
-  [head, grab].forEach(el => {
-    el.addEventListener('pointerdown', e => { y0 = e.clientY; sheet.style.transition = 'none'; });
-  });
+  [el.querySelector('.sheet-head'), el.querySelector('.grab')].forEach(h =>
+    h.addEventListener('pointerdown', e => { y0 = e.clientY; el.style.transition = 'none'; }));
   addEventListener('pointermove', e => {
     if (y0 === null) return;
-    const dy = Math.max(0, e.clientY - y0);
-    sheet.style.transform = `translateY(${dy}px)`;
+    el.style.transform = `translateY(${Math.max(0, e.clientY - y0)}px)`;
   });
   addEventListener('pointerup', e => {
     if (y0 === null) return;
     const dy = Math.max(0, e.clientY - y0);
-    y0 = null; sheet.style.transition = ''; sheet.style.transform = '';
-    if (dy > 110) closeSheet();
+    y0 = null; el.style.transition = ''; el.style.transform = '';
+    if (dy > 110) close();
   });
-})();
+}
+dragToDismiss(sheet, closeSheet);
+dragToDismiss(xsheet, closeExpense);
 
 /* ── money inputs ──────────────────────────────────────────────────────── */
 const readMoney = id => Number(document.getElementById(id).value.replace(/[^\d]/g, '')) || 0;
@@ -637,7 +960,8 @@ function attachMoney(input) {
     try { input.setSelectionRange(pos, pos); } catch {}
   });
 }
-['fSave', 'fInv', 'tSaveAmt', 'tInvAmt'].forEach(id => attachMoney(document.getElementById(id)));
+['fSave', 'fInv', 'tSaveAmt', 'tInvAmt', 'xAmt', 'tBudget']
+  .forEach(id => attachMoney(document.getElementById(id)));
 
 /* ── setup wiring ──────────────────────────────────────────────────────── */
 function bindTarget(inputId, key, field) {
@@ -653,6 +977,13 @@ bindTarget('tSaveAmt', 'savings', 'amount');
 bindTarget('tSaveMonth', 'savings', 'month');
 bindTarget('tInvAmt', 'invested', 'amount');
 bindTarget('tInvMonth', 'invested', 'month');
+
+(() => {
+  const el = document.getElementById('tBudget');
+  const commit = async () => { state.budget = readMoney('tBudget'); await save(); renderSetup(); renderPace(); renderSpend(); };
+  el.addEventListener('change', commit);
+  el.addEventListener('blur', commit);
+})();
 
 document.getElementById('tCur').onchange = async e => {
   state.currency = e.target.value; await save(); renderAll(); renderSetup();
@@ -699,8 +1030,27 @@ document.getElementById('btnCsvSummary').onclick = async () => {
     if (t.avg !== null) rows.push([`${name} recent average per month`, Math.round(t.avg)]);
     rows.push([`${name} status`, CHIP[t.status][1]]);
   }
+  const b = budgetPace(thisMonth());
+  rows.push(['Spending cap per month', state.budget || '']);
+  rows.push(['Spent this month', b.spent]);
+  if (b.cap) {
+    rows.push([b.over ? 'Over the cap by' : 'Left this month', b.over ? b.spent - b.cap : b.left]);
+    rows.push(['Projected month total', Math.round(b.projected)]);
+    rows.push(['Spending status', b.over ? 'Over' : b.onTrack ? 'On track' : 'Heading over']);
+  }
+  for (const r of breakdown(thisMonth())) rows.push([`Spent on ${r.cat}`, r.amount]);
+
   download(`fintracktor-summary-${stamp()}.csv`, 'text/csv;charset=utf-8', csv(rows));
   await markExported(); toast('Summary exported.');
+};
+
+document.getElementById('btnCsvExpenses').onclick = async () => {
+  const list = xSorted();
+  if (!list.length) { toast('No expenses to export yet.'); return; }
+  const rows = [['Date', 'Amount', 'Category', 'Note']];
+  list.forEach(e => rows.push([e.date, e.amount, e.cat, e.note || '']));
+  download(`fintracktor-expenses-${stamp()}.csv`, 'text/csv;charset=utf-8', csv(rows));
+  await markExported(); toast('Expenses exported.');
 };
 
 document.getElementById('btnJson').onclick = async () => {
@@ -739,8 +1089,11 @@ document.getElementById('btnWipe').onclick = async () => {
 function go(tab) {
   document.querySelectorAll('nav button').forEach(b =>
     b.setAttribute('aria-current', String(b.dataset.tab === tab)));
-  ['pace', 'history', 'setup'].forEach(n =>
+  ['pace', 'spend', 'history', 'setup'].forEach(n =>
     document.getElementById('tab-' + n).hidden = n !== tab);
+  // The + always means one thing: log an expense, the daily action. Balance
+  // snapshots are monthly and get their own labelled button on History, so
+  // there is no context to remember.
   document.getElementById('fab').hidden = tab === 'setup';
   scrollTo(0, 0);
 }
@@ -750,7 +1103,7 @@ document.addEventListener('click', e => {
 });
 
 let toastTimer;
-function toast(msg, action, fn) {
+function toast(msg, action, fn, ms) {
   const box = document.getElementById('toast');
   box.querySelector('.msg').textContent = msg;
   const btn = box.querySelector('button');
@@ -758,10 +1111,11 @@ function toast(msg, action, fn) {
   if (action) { btn.textContent = action; btn.onclick = () => { box.classList.remove('on'); fn(); }; }
   box.classList.add('on');
   clearTimeout(toastTimer);
-  if (!action) toastTimer = setTimeout(() => box.classList.remove('on'), 3200);
+  if (!action || ms) toastTimer = setTimeout(() => box.classList.remove('on'), ms || 3200);
 }
 
 function renderAll() {
+  renderSpend();
   document.getElementById('stamp').textContent =
     (sorted().at(-1)?.date ? fmtShort(sorted().at(-1).date) : fmtShort(todayISO())).toUpperCase();
   renderPace(); renderHistory(); renderSetup();
@@ -795,7 +1149,10 @@ if ('serviceWorker' in navigator) {
 (async () => {
   const doc = await readDoc();
   if (doc) state = Object.assign(blank(), doc);
+  if (!Array.isArray(state.expenses)) state.expenses = [];
+  state.v = 2;
   renderAll();
   go('pace');
+  quickAdd();
   try { await navigator.storage?.persist?.(); } catch {}
 })();

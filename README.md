@@ -45,6 +45,72 @@ Entering a contribution into the Total field is the easy mistake, and it reads a
 a large loss. Any entry that lowers the running total is challenged before it is
 stored, naming both figures.
 
+## Expenses
+
+Expenses are a **separate record** from the savings balance. You still type your
+bank balance by hand each month; nothing here adjusts it. The two are never
+reconciled, which is the point — miss a coffee and your balance figure is still
+correct, because it was never derived from your expenses in the first place.
+
+Each expense is an amount, a date, a category and an optional note. Categories
+are five fixed ones — Food, Transport, Bills, Shopping, Health — plus **Other**,
+which lets you type a name. A typed name becomes a chip of its own next time, in
+order of first use, so it stays put as history grows.
+
+Set a **monthly cap** in Setup and Pace gains a spending card: what you have
+spent, what is left, what that leaves per day, and whether today's rate lands you
+over by month end. Without a cap, spending is still recorded, just not measured
+against anything.
+
+The breakdown on the Spend tab is ranked by amount in a single hue. Its job is
+magnitude — where the money went, biggest first — so the bar length carries the
+comparison and the label carries the identity. There is deliberately no
+colour-per-category scheme to learn or to fail a colourblind reader.
+
+## Logging an expense from a Back Tap
+
+iOS can run a Shortcut when you tap the back of the phone, and that is as far as
+iOS will go: **a Shortcut cannot write into this app's storage.** What it can do
+is open a URL carrying the amount, which the app reads on launch:
+
+```
+/?spend=250&cat=food&note=lunch
+```
+
+`spend` is required; `cat` and `note` are optional. An unknown `cat` becomes a
+typed category. The parameter is stripped with `replaceState` *before* anything
+is saved, so a refresh can never log the same expense twice, and the confirmation
+toast carries an **Undo** for seven seconds — a gesture on the back of a phone
+will sometimes fire by accident.
+
+Leave the amount off (`/?spend&cat=bills`) and the app opens the expense sheet
+with that category selected instead of saving anything.
+
+### The Shortcut
+
+In the Shortcuts app, make one called *Log expense*:
+
+1. **Ask for Input** — Number — "How much?"
+2. **Choose from Menu** — Food, Transport, Bills, Shopping, Health *(optional)*
+3. **URL** — `https://YOUR-SITE.netlify.app/?spend=` + the Ask for Input result
+   + `&cat=` + the chosen menu item
+4. **Open URLs**
+
+Then **Settings → Accessibility → Touch → Back Tap → Double Tap** and pick it.
+
+### One caveat worth testing first
+
+iOS gives a home-screen web app its own storage, separate from Safari. If
+Shortcuts' *Open URLs* lands in Safari rather than the installed app, the expense
+is written to a copy of Fintracktor that has none of your data.
+
+Check before relying on it: open the app from your home screen and confirm your
+entries are there, then visit the same URL in Safari. **If Safari shows the
+first-run screen, storage is partitioned** and the URL route reaches only the
+Safari copy. The fallback is to have the Shortcut copy the amount to the
+clipboard and use *Open App*, pasting it in the sheet — one more tap, but it
+reaches the right storage.
+
 ## Where the data lives
 
 In IndexedDB on the device, with `localStorage` as a fallback for private windows.
@@ -56,6 +122,7 @@ So export regularly. Setup offers three:
 | Export | Contents |
 | --- | --- |
 | Entries as CSV | One row per entry, with the derived contribution — import into a sheet |
+| Expenses as CSV | Every expense, with its category |
 | Summary as CSV | Targets, pace and monthly figures — a second tab in the same sheet |
 | Full backup as JSON | Everything, and the only format `Restore` accepts |
 
@@ -68,9 +135,18 @@ whole site.
 
 ```sh
 npm run dev     # serve public/ at http://localhost:8080
-npm test        # drive the app in Chromium and check the pace maths
+npm test        # all three suites below, in Chromium
 npm run icons   # re-render the PNG icons from the vector mark
 ```
+
+| Suite | Covers |
+| --- | --- |
+| `tools/smoke-test.mjs` | pace maths, the entry sheet, history, CSV bodies, persistence |
+| `tools/expenses-test.mjs` | expenses, categories, the cap, and the quick-add URL |
+| `tools/sw-freshness-test.mjs` | that a deploy actually reaches an installed app |
+
+`tools/serve.mjs` holds the static server, the frozen clock and the reporter they
+share.
 
 `npm test` needs Playwright, the only dev dependency: `npm install`.
 

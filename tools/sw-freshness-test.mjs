@@ -3,37 +3,17 @@
 // reloads — the way a Netlify deploy does. Cache-first sub-resources fail here.
 // Run: node tools/sw-freshness-test.mjs
 import { chromium } from 'playwright';
-import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
-import { extname, resolve, normalize, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'public');
-const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
-  '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.svg': 'image/svg+xml' };
+import { serve, reporter } from './serve.mjs';
 
 let build = 1;   // flipped to 2 to stand in for a deploy
-const server = createServer(async (req, res) => {
-  let p = normalize(decodeURIComponent(req.url.split('?')[0]));
-  if (p === '/' || p.endsWith('/')) p += 'index.html';
-  try {
-    let body = await readFile(resolve(ROOT, '.' + p));
-    if (build === 2 && p === '/app.js') body = `window.__BUILD='v2';\n` + body;
-    if (build === 2 && p === '/styles.css') body = body + `\n:root{--build:"v2"}\n`;
-    res.writeHead(200, { 'Content-Type': TYPES[extname(p)] || 'application/octet-stream',
-      'Cache-Control': 'public, max-age=0, must-revalidate' });
-    res.end(body);
-  } catch { res.writeHead(404).end('not found'); }
+const { base, close } = await serve((path, body) => {
+  if (build !== 2) return body;
+  if (path === '/app.js') return `window.__BUILD='v2';\n` + body;
+  if (path === '/styles.css') return body + `\n:root{--build:"v2"}\n`;
+  return body;
 });
-await new Promise(r => server.listen(0, r));
-const base = `http://127.0.0.1:${server.address().port}`;
+const { check, done } = reporter();
 
-const fails = [];
-const check = (name, got, want) => {
-  const ok = String(got) === String(want);
-  console.log(`  ${ok ? 'ok  ' : 'FAIL'}  ${name}${ok ? '' : `\n          got:  ${got}\n          want: ${want}`}`);
-  if (!ok) fails.push(name);
-};
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
@@ -64,6 +44,5 @@ check('and styles came from the cache', await page.evaluate(
 await ctx.setOffline(false);
 
 await browser.close();
-server.close();
-console.log(fails.length ? `\n${fails.length} FAILED: ${fails.join(', ')}\n` : '\nall checks passed\n');
-process.exit(fails.length ? 1 : 0);
+close();
+done();
