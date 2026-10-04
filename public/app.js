@@ -599,7 +599,12 @@ function renderSpend() {
   const el = document.getElementById('tab-spend');
   const ym = spendMonth || thisMonth();
   const b = budgetPace(ym);
-  const list = monthOf(ym).sort((a, b2) => (a.date < b2.date ? 1 : a.date > b2.date ? -1 : 0));
+  // Newest first, and within a day the most recently logged first — so the
+  // expense you just added is at the top rather than buried under the day.
+  const list = monthOf(ym)
+    .map((e, i) => [e, i])
+    .sort(([a, ai], [b2, bi]) => (a.date < b2.date ? 1 : a.date > b2.date ? -1 : bi - ai))
+    .map(([e]) => e);
   const months = [...new Set(state.expenses.map(e => e.date.slice(0, 7)))].sort();
   const earliest = months.length ? monthIdx(months[0]) : nowMonthIdx();
   const here = monthIdx(ym);
@@ -772,21 +777,38 @@ async function addExpense(x) {
 
 /* ── quick add from a URL ──────────────────────────────────────────────
    An iOS Shortcut cannot write to this app's storage, so the Back Tap route
-   is: Shortcut asks for the amount, opens /?spend=250&cat=food, and this
-   reads it on launch. The parameter is stripped before anything is saved,
-   so a refresh can never log the same expense twice. */
+   is: Shortcut asks for the amount, opens the app at ?spend=250&cat=food,
+   and this reads it on launch.
+
+   The parameters are accepted in the hash as well as the query. iOS opens an
+   installed home-screen web app through a webapp:// link that has to match
+   the installed URL closely, and a query string may be enough of a
+   difference to stop it matching; a fragment generally is not. Same
+   parameters either way, so whichever form survives, this reads it. */
 function quickAdd() {
-  const q = new URLSearchParams(location.search);
-  if (!q.has('spend')) return;
+  const query = new URLSearchParams(location.search);
+  const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+  const q = query.has('spend') ? query : hash.has('spend') ? hash : null;
+  if (!q) return;
   const raw = q.get('spend');
-  const cat = normCat(q.get('cat') || 'Other');
+  const given = q.get('cat');
+  const cat = given ? normCat(given) : null;
   const note = String(q.get('note') || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+  // pathname alone drops both the query and the hash, so neither can replay.
   history.replaceState({}, '', location.pathname);
 
+  // No amount is the useful bare case — a shortcut that only opens the app.
+  // Leave the category unset so the sheet opens on its default rather than
+  // sitting in Other with an empty name field.
   const amount = Math.round(Number(String(raw).replace(/[^\d.]/g, '')) || 0);
-  if (!(amount > 0)) { go('spend'); openExpense(null, { cat, note }); return; }
-  addExpense({ date: todayISO(), amount, cat, note });
+  if (!(amount > 0)) { go('spend'); openExpense(null, cat ? { cat, note } : { note }); return; }
+  addExpense({ date: todayISO(), amount, cat: cat || 'Other', note });
 }
+
+/* Changing only the hash does not reload the page, so when the app is already
+   open the boot path never runs. Without this, a second back tap in a session
+   would do nothing at all. */
+addEventListener('hashchange', quickAdd);
 
 /* ── the sheet ─────────────────────────────────────────────────────────── */
 const sheet = document.getElementById('sheet'), scrim = document.getElementById('scrim');

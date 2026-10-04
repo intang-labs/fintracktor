@@ -70,67 +70,61 @@ colour-per-category scheme to learn or to fail a colourblind reader.
 ## Logging an expense from a Back Tap
 
 iOS can run a Shortcut when you tap the back of the phone, and that is as far as
-iOS will go: **a Shortcut cannot write into this app's storage.** What it can do
-is open a URL carrying the amount, which the app reads on launch:
+iOS will go: **a Shortcut cannot write into this app's storage.** It does not
+need to. A `webapp://` link opens the installed app, and the app can open
+straight onto the expense sheet with the keypad up — which is the whole point of
+the gesture.
 
-```
-/?spend=250&cat=food&note=lunch
-```
-
-`spend` is required; `cat` and `note` are optional. An unknown `cat` becomes a
-typed category. The parameter is stripped with `replaceState` *before* anything
-is saved, so a refresh can never log the same expense twice, and the confirmation
-toast carries an **Undo** for seven seconds — a gesture on the back of a phone
-will sometimes fire by accident.
-
-Leave the amount off (`/?spend&cat=bills`) and the app opens the expense sheet
-with that category selected instead of saving anything.
+If the link will also carry the amount, the typing disappears too; see below for
+why that part is worth testing rather than assuming.
 
 ### The Shortcut
 
+`webapp://` opens an installed home-screen web app. The URL has to match the one
+the app was installed from closely — long-press the Fintracktor icon, tap
+**Share**, copy the link, and drop the `https://`:
+
+```
+https://fintracktor.netlify.app/   →   webapp://fintracktor.netlify.app/
+```
+
 In the Shortcuts app, make one called *Log expense*:
 
-1. **Ask for Input** — Number — "How much?"
-2. **Choose from Menu** — Food, Transport, Bills, Shopping, Health *(optional)*
-3. **URL** — `https://YOUR-SITE.netlify.app/?spend=` + the Ask for Input result
-   + `&cat=` + the chosen menu item
-4. **Open URLs**
+1. **URL** — `webapp://fintracktor.netlify.app/#spend`
+2. **Open URLs**
 
 Then **Settings → Accessibility → Touch → Back Tap → Double Tap** and pick it.
 
-### Which copy of the app does that open?
+Back tap, and the app opens with the expense sheet already up and the keypad
+focused. Type the amount, pick a category, save.
 
-This is the part to settle before relying on any of it.
+### Carrying the amount in, if the link tolerates it
 
-**`Open URLs` hands the URL to the default browser.** iOS does not route a URL
-into an installed home-screen web app the way Android does, so that step opens
-Safari — not the icon on your home screen. Whether that matters comes down to one
-question: **does Safari share storage with the installed app?** Historically iOS
-has given a home-screen web app its own container, which would mean the expense
-lands in a copy of Fintracktor holding none of your data.
+The app also accepts the figure in the URL, so the Shortcut can ask for it and
+skip the typing:
 
-Two checks, in this order.
+```
+webapp://fintracktor.netlify.app/#spend=250&cat=food&note=lunch
+```
 
-**1. Can a Shortcut open the installed app at all?** (15 seconds) In Shortcuts,
-add an **Open App** action and search for Fintracktor. Home-screen web apps are
-WebClips rather than real apps, and whether they appear in that picker is the
-pivotal unknown here — it has varied by iOS version and is not something this
-repository can test.
+1. **Ask for Input** — Number — "How much?"
+2. **Choose from Menu** — Food, Transport, Bills, Shopping, Health *(optional)*
+3. **URL** — `webapp://fintracktor.netlify.app/#spend=` + the result + `&cat=` + the choice
+4. **Open URLs**
 
-**2. Do the two share storage?** (30 seconds) Open Fintracktor from the home
-screen and confirm your entries are there, then visit the same URL in Safari. **A
-first-run screen in Safari means the storage is separate.**
+Whether that still matches the installed app is the thing to try: a fragment is
+usually ignored when matching a URL, but `webapp://` is strict and this is not
+something the repository can test. If the link stops opening the app, fall back
+to the bare `#spend` above and type the amount — that is the reliable form.
 
-What the answers mean:
+The parameters work identically in the query string (`?spend=250`), which is the
+form to use when Fintracktor is open in a browser rather than installed.
 
-| Open App lists it | Shared storage | What works |
-| --- | --- | --- |
-| — | yes | The recipe above, exactly as written |
-| yes | no | Back tap opens the real app, but **Open App takes no parameter** — so type the amount there, or have the Shortcut copy it to the clipboard and paste |
-| no | no | A Shortcut cannot reach the installed app. Either use Fintracktor in Safari, where the recipe works end to end, or keep it installed and open it yourself |
-
-The last row is the honest worst case: the back tap would still be a two-tap way
-to *reach* the app, but not to carry the amount into it.
+Either way the app strips them with `replaceState` *before* saving, so a refresh
+can never log the same expense twice, and the confirmation toast carries an
+**Undo** for seven seconds — a gesture on the back of a phone will fire by
+accident sometimes. A hash arriving while the app is already open is handled too,
+since changing only the fragment does not reload the page.
 
 ## Where the data lives
 

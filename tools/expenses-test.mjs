@@ -115,6 +115,19 @@ await page.click('#toast button');
 await page.waitForTimeout(500);
 check('undone', await page.locator('#tab-spend .spend-total').textContent(), '₹10,750');
 
+console.log('\nthe same parameters in the hash');
+// A webapp:// link has to match the installed URL closely, so the hash form
+// is the one more likely to survive. It must behave identically.
+await page.goto(`${base}/#spend=300&cat=bills&note=water`, { waitUntil: 'networkidle' });
+await page.waitForTimeout(600);
+check('a hash quick-add logs too', await page.locator('#tab-spend .spend-total').textContent(), '₹11,050');
+check('the hash is stripped', new URL(page.url()).hash, '');
+check('its category came through',
+  await page.locator('#tab-spend .swipe').filter({ hasText: '₹300' }).locator('.xcat').textContent(), 'Bills');
+await page.click('#toast button');
+await page.waitForTimeout(500);
+check('and it undoes', await page.locator('#tab-spend .spend-total').textContent(), '₹10,750');
+
 console.log('\nno amount means open the keypad instead');
 await page.goto(`${base}/?spend&cat=bills`, { waitUntil: 'networkidle' });
 await page.waitForTimeout(700);
