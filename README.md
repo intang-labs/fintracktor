@@ -115,7 +115,14 @@ webapp://fintracktor.netlify.app/#spend=250&cat=food&note=lunch
 Whether that still matches the installed app is the thing to try: a fragment is
 usually ignored when matching a URL, but `webapp://` is strict and this is not
 something the repository can test. If the link stops opening the app, fall back
-to the bare `#spend` above and type the amount — that is the reliable form.
+to the bare form above and type the amount — that is the reliable one.
+
+### When the fragment does not survive
+
+If even `#spend` breaks the match, use the bare `webapp://fintracktor.netlify.app/`
+and turn on **Open the keypad on launch** in Setup. Every launch then opens
+straight into a new expense, which needs nothing from the URL at all. Dismiss it
+with a swipe down on the occasions you only wanted to look at Pace.
 
 The parameters work identically in the query string (`?spend=250`), which is the
 form to use when Fintracktor is open in a browser rather than installed.

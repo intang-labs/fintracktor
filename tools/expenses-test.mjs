@@ -137,6 +137,25 @@ check('with the category already chosen',
 await page.click('#xsheetClose');
 await page.waitForTimeout(350);
 
+console.log('\nopening the keypad on launch');
+await page.click('nav button[data-tab="setup"]');
+await page.waitForTimeout(200);
+check('the switch starts off', await page.locator('#tOpenSheet').isChecked(), 'false');
+await page.click('#tOpenSheet');
+await page.waitForTimeout(300);
+await page.goto(base, { waitUntil: 'networkidle' });   // a plain launch, no parameter
+await page.waitForTimeout(700);
+check('a plain launch opens the sheet', await page.locator('#xsheet').isVisible(), 'true');
+check('on the Spend tab', await page.locator('#tab-spend').isVisible(), 'true');
+await page.click('#xsheetClose');
+await page.waitForTimeout(350);
+await page.click('nav button[data-tab="setup"]');
+await page.click('#tOpenSheet');
+await page.waitForTimeout(300);
+await page.goto(base, { waitUntil: 'networkidle' });
+await page.waitForTimeout(700);
+check('off again, and it does not', await page.locator('#xsheet').isVisible(), 'false');
+
 console.log('\nexport');
 const [dl] = await Promise.all([page.waitForEvent('download'),
   page.click('nav button[data-tab="setup"]').then(() => page.click('#btnCsvExpenses'))]);

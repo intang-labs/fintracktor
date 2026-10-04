@@ -50,6 +50,7 @@ const blank = () => ({
   expenses: [],       // { id, date, amount, cat, note }
   targets: { savings: { amount: 0, month: '' }, invested: { amount: 0, month: '' } },
   budget: 0,          // monthly spending cap, 0 = none set
+  openToSheet: false, // launch straight into a new expense
   currency: 'INR',
   lastExport: null,
 });
@@ -481,6 +482,7 @@ function renderSetup() {
               : `, with <span class="num" style="font-weight:600">${money(b.left)}</span> left.`);
   }
   document.getElementById('tCur').value = state.currency;
+  document.getElementById('tOpenSheet').checked = !!state.openToSheet;
 
   const age = document.getElementById('exportAge');
   if (!state.lastExport) { age.textContent = ''; return; }
@@ -789,7 +791,7 @@ function quickAdd() {
   const query = new URLSearchParams(location.search);
   const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
   const q = query.has('spend') ? query : hash.has('spend') ? hash : null;
-  if (!q) return;
+  if (!q) return false;
   const raw = q.get('spend');
   const given = q.get('cat');
   const cat = given ? normCat(given) : null;
@@ -801,8 +803,9 @@ function quickAdd() {
   // Leave the category unset so the sheet opens on its default rather than
   // sitting in Other with an empty name field.
   const amount = Math.round(Number(String(raw).replace(/[^\d.]/g, '')) || 0);
-  if (!(amount > 0)) { go('spend'); openExpense(null, cat ? { cat, note } : { note }); return; }
+  if (!(amount > 0)) { go('spend'); openExpense(null, cat ? { cat, note } : { note }); return true; }
   addExpense({ date: todayISO(), amount, cat: cat || 'Other', note });
+  return true;
 }
 
 /* Changing only the hash does not reload the page, so when the app is already
@@ -1007,6 +1010,10 @@ bindTarget('tInvMonth', 'invested', 'month');
   el.addEventListener('blur', commit);
 })();
 
+document.getElementById('tOpenSheet').onchange = async e => {
+  state.openToSheet = e.target.checked; await save();
+};
+
 document.getElementById('tCur').onchange = async e => {
   state.currency = e.target.value; await save(); renderAll(); renderSetup();
 };
@@ -1175,6 +1182,9 @@ if ('serviceWorker' in navigator) {
   state.v = 2;
   renderAll();
   go('pace');
-  quickAdd();
+  // A webapp:// link has to match the installed URL closely, so a fragment
+  // carrying #spend may not survive it. This setting gets the same result
+  // without relying on the URL at all.
+  if (!quickAdd() && state.openToSheet) { go('spend'); openExpense(null); }
   try { await navigator.storage?.persist?.(); } catch {}
 })();
