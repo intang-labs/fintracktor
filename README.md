@@ -80,82 +80,53 @@ why that part is worth testing rather than assuming.
 
 ### The Shortcut
 
-`webapp://` opens an installed home-screen web app. The URL has to match the one
-the app was installed from closely — long-press the Fintracktor icon, tap
-**Share**, copy the link, and drop the `https://`:
+`webapp://` opens an installed home-screen web app. **The URL has to match the
+installed one exactly, trailing slash included**, and getting it wrong does not
+fail cleanly — on a phone with several web apps installed, a near-miss has been
+observed opening a different one.
+
+Setup carries a **Copy this app's link** row that reports the exact string for the
+running app. Use that rather than retyping.
 
 ```
-https://fintracktor.netlify.app/   →   webapp://fintracktor.netlify.app/
+webapp://fintracktor.netlify.app/
 ```
 
-In the Shortcuts app, make one called *Log expense*:
-
-1. **URL** — `webapp://fintracktor.netlify.app/#spend`
-2. **Open URLs**
+1. **Shortcuts** → **+**
+2. Add a **URL** action and paste the link
+3. Add **Open URLs**
+4. Rename it *Log expense*
 
 Then **Settings → Accessibility → Touch → Back Tap → Double Tap** and pick it.
 
-Back tap, and the app opens with the expense sheet already up and the keypad
-focused. Type the amount, pick a category, save.
+Finally, in Fintracktor: **Setup → Open the keypad on launch**. The app then opens
+straight into a new expense. Back tap, type the amount, pick a category, save.
 
-### Carrying the amount in, if the link tolerates it
+**Do not append anything to that URL.** Adding `#spend` to it has been observed to
+stop it working on iOS: the match is strict enough that even a fragment breaks it.
+That is why the keypad is a setting rather than a URL parameter — the app cannot
+be told anything through a `webapp://` link beyond "open".
 
-The app also accepts the figure in the URL, so the Shortcut can ask for it and
-skip the typing:
+### Carrying the amount in, in a browser
+
+In a browser tab, where ordinary URLs apply, the app does read the figure from the
+URL, in either the query or the hash:
 
 ```
-webapp://fintracktor.netlify.app/#spend=250&cat=food&note=lunch
+https://fintracktor.netlify.app/?spend=250&cat=food&note=lunch
+https://fintracktor.netlify.app/#spend=250&cat=food&note=lunch
 ```
 
-1. **Ask for Input** — Number — "How much?"
-2. **Choose from Menu** — Food, Transport, Bills, Shopping, Health *(optional)*
-3. **URL** — `webapp://fintracktor.netlify.app/#spend=` + the result + `&cat=` + the choice
-4. **Open URLs**
+`spend` is required; `cat` and `note` are optional, and an unknown `cat` becomes a
+typed category. Both forms are stripped with `replaceState` *before* anything is
+saved, so a refresh can never log the same expense twice, and the confirmation
+toast carries an **Undo** for seven seconds. A hash arriving while the app is
+already open is handled too, since changing only the fragment does not reload the
+page.
 
-Whether that still matches the installed app is the thing to try: a fragment is
-usually ignored when matching a URL, but `webapp://` is strict and this is not
-something the repository can test. If the link stops opening the app, fall back
-to the bare form above and type the amount — that is the reliable one.
-
-### If it opens the wrong app
-
-`webapp://` matching is opaque, and on a phone with more than one installed web
-app it has been seen opening a different one. Two things to check.
-
-**Does the URL matter at all?** Point the Shortcut at
-`webapp://this-does-not-exist.invalid/` and run it. If the same wrong app still
-opens, the scheme is ignoring the URL and no spelling of it will help. If instead
-nothing opens, the URL is being matched and ours is simply not matching.
-
-**Is the other app on a `*.netlify.app` subdomain too?** `netlify.app` is a shared
-domain, and matching that works on the registrable domain rather than the full
-host would collide every Netlify site with every other. A custom domain removes
-the ambiguity and is the fix worth trying first.
-
-Setup carries a **Copy this app's link** row that reports the exact
-`webapp://host/path` for the running app, so the string in the Shortcut can be
-compared against the real one rather than retyped from memory.
-
-If neither helps, a Shortcut cannot reach the installed app on that phone. Use
-Fintracktor in Safari instead, where `https://…/#spend` works end to end — export
-a JSON backup from the installed app first and restore it there, since the two
-are separate storage.
-
-### When the fragment does not survive
-
-If even `#spend` breaks the match, use the bare `webapp://fintracktor.netlify.app/`
-and turn on **Open the keypad on launch** in Setup. Every launch then opens
-straight into a new expense, which needs nothing from the URL at all. Dismiss it
-with a swipe down on the occasions you only wanted to look at Pace.
-
-The parameters work identically in the query string (`?spend=250`), which is the
-form to use when Fintracktor is open in a browser rather than installed.
-
-Either way the app strips them with `replaceState` *before* saving, so a refresh
-can never log the same expense twice, and the confirmation toast carries an
-**Undo** for seven seconds — a gesture on the back of a phone will fire by
-accident sometimes. A hash arriving while the app is already open is handled too,
-since changing only the fragment does not reload the page.
+This is the route to use if you run Fintracktor in Safari rather than from the
+home screen. Note that the two are separate storage: moving between them means
+exporting a JSON backup from one and restoring it in the other.
 
 ## Where the data lives
 
