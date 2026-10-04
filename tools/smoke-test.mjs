@@ -1,35 +1,11 @@
 // Drives the built app in Chromium and checks the pace maths, the sheet, the
 // history list and both CSV exports. Run: node tools/smoke-test.mjs
 import { chromium } from 'playwright';
-import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { extname, resolve, normalize } from 'node:path';
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { serve, freezeClock, reporter } from './serve.mjs';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'public');
-const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
-  '.json': 'application/json', '.webmanifest': 'application/manifest+json',
-  '.png': 'image/png', '.svg': 'image/svg+xml' };
-
-const server = createServer(async (req, res) => {
-  let p = normalize(decodeURIComponent(req.url.split('?')[0]));
-  if (p === '/' || p.endsWith('/')) p += 'index.html';
-  try {
-    const body = await readFile(resolve(ROOT, '.' + p));
-    res.writeHead(200, { 'Content-Type': TYPES[extname(p)] || 'application/octet-stream' });
-    res.end(body);
-  } catch { res.writeHead(404).end('not found'); }
-});
-await new Promise(r => server.listen(0, r));
-const base = `http://127.0.0.1:${server.address().port}`;
-
-const fails = [];
-const check = (name, got, want) => {
-  const ok = String(got) === String(want);
-  console.log(`${ok ? '  ok  ' : '  FAIL'}  ${name}${ok ? '' : `\n          got:  ${got}\n          want: ${want}`}`);
-  if (!ok) fails.push(name);
-};
+const { base, close } = await serve();
+const { check, done } = reporter();
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
@@ -38,16 +14,7 @@ const errors = [];
 page.on('console', m => m.type() === 'error' && errors.push(m.text()));
 page.on('pageerror', e => errors.push(e.message));
 
-// A fixed clock, so the month maths are checkable rather than drifting daily.
-await page.addInitScript(() => {
-  const FIXED = new Date('2026-08-26T10:00:00').getTime();
-  const Real = Date;
-  // eslint-disable-next-line no-global-assign
-  Date = class extends Real {
-    constructor(...a) { return a.length ? new Real(...a) : new Real(FIXED); }
-    static now() { return FIXED; }
-  };
-});
+await page.addInitScript(freezeClock('2026-08-26T10:00:00'));
 
 await page.goto(base, { waitUntil: 'networkidle' });
 
@@ -68,7 +35,6 @@ check('savings amount reformats with locale grouping', await page.inputValue('#t
 console.log('\nlogging entries');
 // The + button is deliberately absent on Setup, so come back to Pace first.
 check('fab is hidden on setup', await page.locator('#fab').isVisible(), 'false');
-await page.click('nav button[data-tab="pace"]');
 // The last one is entered as a contribution, the way it is meant to be used
 // month to month; the earlier ones set up the running total.
 for (const [date, sav, inv, mode] of [
@@ -77,7 +43,8 @@ for (const [date, sav, inv, mode] of [
   ['2026-07-26', '596000', '925000', 'total'],
   ['2026-08-26', '642000', '55000', 'add'],
 ]) {
-  await page.click('#fab');
+  await page.click('nav button[data-tab="history"]');
+  await page.click('#newEntry');
   await page.waitForTimeout(360);
   await page.fill('#fDate', date);
   await page.fill('#fSave', sav);
@@ -94,7 +61,8 @@ check('contributions and totals both land on the same figure', errors.length, 0)
 
 console.log('\nentering a contribution, not a total');
 // The reported bug: 3L logged as the total, then 15k meant as "I added this".
-await page.click('#fab');
+await page.click('nav button[data-tab="history"]');
+await page.click('#newEntry');
 await page.waitForTimeout(360);
 await page.fill('#fDate', '2026-09-26');
 check('a new entry defaults to Add',
@@ -181,6 +149,5 @@ await page.waitForTimeout(420);
 await page.screenshot({ path: 'tools/shot-sheet.png' });
 
 await browser.close();
-server.close();
-console.log(fails.length ? `\n${fails.length} FAILED: ${fails.join(', ')}\n` : '\nall checks passed\n');
-process.exit(fails.length ? 1 : 0);
+close();
+done();

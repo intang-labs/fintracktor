@@ -30,6 +30,7 @@
 
 <main>
   <section id="tab-pace" aria-label="Pace"></section>
+  <section id="tab-spend" aria-label="Spending" hidden></section>
   <section id="tab-history" aria-label="History" hidden></section>
 
   <section id="tab-setup" aria-label="Setup" hidden>
@@ -70,6 +71,18 @@
     </div>
 
     <div class="card">
+      <div class="track-head">
+        <span class="dot" style="background:var(--invest)"></span>
+        <span class="name">Monthly spending cap</span>
+      </div>
+      <label class="fld" style="margin:13px 0 0">
+        <span class="lbl">Spend no more than, per month</span>
+        <input id="tBudget" type="text" inputmode="decimal" placeholder="0" autocomplete="off">
+      </label>
+      <div id="budgetNote" class="note"></div>
+    </div>
+
+    <div class="card">
       <label class="fld" style="margin:0">
         <span class="lbl">Currency</span>
         <select id="tCur">
@@ -101,6 +114,13 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="2.2"
           stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
       </button>
+      <button class="row" id="btnCsvExpenses">
+        <span class="tile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg></span>
+        <span class="rt"><b>Expenses as CSV</b><small>Every expense, with its category</small></span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
       <button class="row" id="btnJson">
         <span class="tile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
           stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M8 11l4 4 4-4"/><path d="M5 19h14"/></svg></span>
@@ -108,6 +128,17 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="2.2"
           stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
       </button>
+    </div>
+
+    <div class="card rows">
+      <div class="eyebrow" style="padding:8px 0 2px">Shortcut</div>
+      <label class="row">
+        <span class="tile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 13H11l-1 9 8.5-11H12z"/></svg></span>
+        <span class="rt"><b>Open the keypad on launch</b>
+          <small>Straight to a new expense, for a Back Tap that cannot carry one</small></span>
+        <input type="checkbox" id="tOpenSheet" class="switch" aria-label="Open the keypad on launch">
+      </label>
     </div>
 
     <div class="card rows">
@@ -148,6 +179,11 @@
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
       stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
     <span>Pace</span>
+  </button>
+  <button data-tab="spend">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5h18v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 7.5 6.5 3h11L21 7.5"/><path d="M9.5 12h5"/></svg>
+    <span>Spend</span>
   </button>
   <button data-tab="history">
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -207,6 +243,51 @@
   </label>
 
   <button class="primary" id="saveEntry">Save entry</button>
+
+  <p class="sheet-foot">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9"
+      stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+    Saved on this device only
+  </p>
+</div>
+
+<div class="sheet" id="xsheet" role="dialog" aria-modal="true" aria-labelledby="xsheetTitle" hidden>
+  <div class="grab"></div>
+  <div class="sheet-head">
+    <h2 id="xsheetTitle">New expense</h2>
+    <button class="iconbtn" id="xsheetClose" aria-label="Close">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.4"
+        stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+
+  <label class="fld">
+    <span class="lbl">Amount</span>
+    <input id="xAmt" type="text" inputmode="decimal" placeholder="0" autocomplete="off">
+  </label>
+
+  <div class="catfield">
+    <span class="lbl">Category</span>
+    <div class="cats" id="xCats" role="group" aria-label="Category"></div>
+    <input id="xCatOther" class="catother" type="text" placeholder="Name this category"
+           autocomplete="off" maxlength="24" aria-label="Category name" hidden>
+  </div>
+
+  <div class="datebtn">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.9"
+      stroke-linecap="round"><rect x="3.5" y="5" width="17" height="16" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+    <span class="txt" id="xDateLabel"></span>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="2.2"
+      stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    <input type="date" id="xDate" aria-label="Expense date">
+  </div>
+
+  <label class="fld text">
+    <span class="lbl">Note</span>
+    <input id="xNote" type="text" placeholder="Optional — e.g. groceries" autocomplete="off" maxlength="80">
+  </label>
+
+  <button class="primary" id="xSave">Save expense</button>
 
   <p class="sheet-foot">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9"

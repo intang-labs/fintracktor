@@ -214,3 +214,65 @@ section[hidden]{display:none}
 .empty{text-align:center;color:var(--muted);font-size:14px;padding:10px 0}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ── spending ──────────────────────────────────────────────────────────── */
+.monthnav{display:flex;align-items:center;gap:8px;margin:0 4px 14px}
+.monthnav h1{flex:1;font-size:26px;margin:0}
+.monthnav button{width:38px;height:38px;border:0;border-radius:13px;background:var(--card);
+  box-shadow:0 1px 2px rgba(19,23,32,.06);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex:none}
+.monthnav button:disabled{opacity:.3;cursor:default}
+.spend-total{font-size:38px;font-weight:600;line-height:1.04;margin:8px 0 4px;display:block}
+
+/* Ranked bars: the job is magnitude, so one hue and a direct label per row.
+   Identity is carried by the label, which is why there is no legend. */
+.bd{display:flex;flex-direction:column;gap:14px;margin-top:4px}
+.bd-row .bd-top{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+.bd-row .bd-name{flex:1;font-size:14px;font-weight:600;letter-spacing:-.01em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bd-row .bd-amt{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:14px;font-weight:600}
+.bd-row .bd-pct{font-family:var(--mono);font-size:11px;color:var(--muted);width:34px;text-align:right}
+.bd-track{height:8px;background:var(--track);border-radius:0 4px 4px 0}
+.bd-fill{display:block;height:100%;background:var(--invest);border-radius:0 4px 4px 0;min-width:3px;
+  transition:width .55s cubic-bezier(.2,.7,.2,1)}
+
+/* .swipe .face carries display:block at two classes of specificity, so this
+   has to match it to win. */
+.swipe .face.xrow{display:flex;align-items:center;gap:12px;padding:13px 16px;width:100%;
+  background:var(--card);border:0;border-radius:20px;text-align:left;cursor:pointer}
+.xrow .xcat{font-size:13px;font-weight:600;padding:5px 10px;border-radius:999px;
+  background:rgba(201,122,22,.10);color:var(--invest);flex:none;max-width:120px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xrow .xmid{flex:1;min-width:0}
+.xrow .xmid b{display:block;font-family:var(--mono);font-variant-numeric:tabular-nums;
+  font-size:17px;font-weight:600}
+.xrow .xmid small{display:block;font-size:12px;color:var(--muted);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xrow .xday{font-family:var(--mono);font-size:11px;color:var(--faint);flex:none}
+
+/* ── category picker ───────────────────────────────────────────────────── */
+.catfield{padding:12px 15px;border-radius:16px;background:var(--wash);margin-bottom:11px}
+.catfield .lbl{display:block;font-size:11px;color:var(--muted);margin-bottom:9px}
+.cats{display:flex;flex-wrap:wrap;gap:7px}
+.cats button{padding:9px 14px;border:0;border-radius:999px;background:var(--card);
+  font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;
+  box-shadow:0 1px 2px rgba(19,23,32,.06)}
+.cats button[aria-pressed="true"]{background:var(--ink);color:#fff;font-weight:600;box-shadow:none}
+.catother{width:100%;margin-top:9px;padding:11px 13px;border:0;border-radius:12px;
+  background:var(--card);box-shadow:0 0 0 2px var(--save);font:inherit;font-size:15px;color:var(--ink)}
+.catother:focus{outline:none}
+.catother[hidden]{display:none}
+
+.addrow{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;
+  border:0;border-radius:18px;background:var(--card);box-shadow:var(--lift);
+  font-size:15px;font-weight:600;color:var(--ink);cursor:pointer;margin-bottom:14px}
+.addrow:active{transform:scale(.99)}
+
+.switch{appearance:none;-webkit-appearance:none;margin:0;flex:none;position:relative;
+  width:50px;height:30px;border-radius:999px;background:var(--track);cursor:pointer;
+  transition:background .22s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;
+  border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(19,23,32,.3);transition:transform .22s}
+.switch:checked{background:var(--save)}
+.switch:checked::after{transform:translateX(20px)}
+.switch:focus-visible{outline:2px solid var(--save);outline-offset:2px}
