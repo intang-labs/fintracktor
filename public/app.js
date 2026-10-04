@@ -483,6 +483,7 @@ function renderSetup() {
   }
   document.getElementById('tCur').value = state.currency;
   document.getElementById('tOpenSheet').checked = !!state.openToSheet;
+  document.getElementById('appLink').textContent = shortcutLink();
 
   const age = document.getElementById('exportAge');
   if (!state.lastExport) { age.textContent = ''; return; }
@@ -1009,6 +1010,22 @@ bindTarget('tInvMonth', 'invested', 'month');
   el.addEventListener('change', commit);
   el.addEventListener('blur', commit);
 })();
+
+/* Exactly what a webapp:// shortcut has to point at, read off the running
+   app rather than retyped — the match is strict enough that a guessed
+   trailing slash or a stale path is the difference between opening this app
+   and opening somebody else's. */
+const shortcutLink = () => 'webapp://' + location.host + location.pathname;
+
+document.getElementById('btnCopyLink').onclick = async () => {
+  const link = shortcutLink();
+  try {
+    await navigator.clipboard.writeText(link);
+    toast('Link copied. Paste it into the Shortcut.');
+  } catch {
+    toast(link);
+  }
+};
 
 document.getElementById('tOpenSheet').onchange = async e => {
   state.openToSheet = e.target.checked; await save();

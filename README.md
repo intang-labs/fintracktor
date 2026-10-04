@@ -117,6 +117,30 @@ usually ignored when matching a URL, but `webapp://` is strict and this is not
 something the repository can test. If the link stops opening the app, fall back
 to the bare form above and type the amount — that is the reliable one.
 
+### If it opens the wrong app
+
+`webapp://` matching is opaque, and on a phone with more than one installed web
+app it has been seen opening a different one. Two things to check.
+
+**Does the URL matter at all?** Point the Shortcut at
+`webapp://this-does-not-exist.invalid/` and run it. If the same wrong app still
+opens, the scheme is ignoring the URL and no spelling of it will help. If instead
+nothing opens, the URL is being matched and ours is simply not matching.
+
+**Is the other app on a `*.netlify.app` subdomain too?** `netlify.app` is a shared
+domain, and matching that works on the registrable domain rather than the full
+host would collide every Netlify site with every other. A custom domain removes
+the ambiguity and is the fix worth trying first.
+
+Setup carries a **Copy this app's link** row that reports the exact
+`webapp://host/path` for the running app, so the string in the Shortcut can be
+compared against the real one rather than retyped from memory.
+
+If neither helps, a Shortcut cannot reach the installed app on that phone. Use
+Fintracktor in Safari instead, where `https://…/#spend` works end to end — export
+a JSON backup from the installed app first and restore it there, since the two
+are separate storage.
+
 ### When the fragment does not survive
 
 If even `#spend` breaks the match, use the bare `webapp://fintracktor.netlify.app/`

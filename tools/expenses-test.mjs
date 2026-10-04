@@ -141,6 +141,8 @@ console.log('\nopening the keypad on launch');
 await page.click('nav button[data-tab="setup"]');
 await page.waitForTimeout(200);
 check('the switch starts off', await page.locator('#tOpenSheet').isChecked(), 'false');
+check('setup shows the exact shortcut link',
+  await page.locator('#appLink').textContent(), `webapp://${new URL(base).host}/`);
 await page.click('#tOpenSheet');
 await page.waitForTimeout(300);
 await page.goto(base, { waitUntil: 'networkidle' });   // a plain launch, no parameter
