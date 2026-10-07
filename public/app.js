@@ -51,6 +51,7 @@ const blank = () => ({
   targets: { savings: { amount: 0, month: '' }, invested: { amount: 0, month: '' } },
   budget: 0,          // monthly spending cap, 0 = none set
   openToSheet: false, // launch straight into a new expense
+  hiddenCats: [],     // typed categories dropped from the picker, not from history
   currency: 'INR',
   lastExport: null,
 });
@@ -513,11 +514,18 @@ const monthOf = ym => state.expenses.filter(e => e.date.slice(0, 7) === ym);
 const sumX = list => list.reduce((n, e) => n + e.amount, 0);
 
 /* Labels typed under Other, in order of first use — so a chip keeps its
-   place as history grows rather than reshuffling alphabetically. */
-function customCats() {
+   place as history grows rather than reshuffling alphabetically.
+
+   Hiding one only takes it off the picker. Nothing is rewritten, so the
+   expenses already filed under it keep their label and keep counting toward
+   the month total and the breakdown. */
+function customCats({ all = false } = {}) {
+  const hidden = state.hiddenCats || [];
   const seen = [];
   for (const e of xSorted()) {
-    if (!FIXED_CATS.includes(e.cat) && e.cat !== 'Other' && !seen.includes(e.cat)) seen.push(e.cat);
+    if (FIXED_CATS.includes(e.cat) || e.cat === 'Other' || seen.includes(e.cat)) continue;
+    if (!all && hidden.includes(e.cat)) continue;
+    seen.push(e.cat);
   }
   return seen;
 }
@@ -700,17 +708,34 @@ function shiftMonth(ym, by) {
 
 /* ── the expense sheet ─────────────────────────────────────────────────── */
 const xsheet = document.getElementById('xsheet');
-let xediting = null, xcat = FIXED_CATS[0];
+let xediting = null, xcat = FIXED_CATS[0], catEditing = false;
 
 function renderCats() {
   const box = document.getElementById('xCats');
   const other = document.getElementById('xCatOther');
+  const edit = document.getElementById('xCatEdit');
+  // A hidden label still belongs on the picker while the expense wearing it
+  // is open, or editing that expense would silently change its category.
   const known = customCats();
+  if (xediting && !FIXED_CATS.includes(xcat) && xcat !== 'Other' && !known.includes(xcat)) known.push(xcat);
   const isOther = !FIXED_CATS.includes(xcat);
-  box.innerHTML = [...FIXED_CATS, ...known].map(c =>
-    `<button type="button" data-cat="${esc(c)}" aria-pressed="${String(c === xcat)}">${esc(c)}</button>`).join('')
-    + `<button type="button" data-cat="__other" aria-pressed="${String(isOther && !known.includes(xcat))}">Other…</button>`;
-  box.querySelectorAll('button').forEach(b => b.onclick = () => {
+
+  edit.hidden = !known.length;
+  if (!known.length) catEditing = false;
+  edit.textContent = catEditing ? 'Done' : 'Edit';
+
+  const x = `<span class="x"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff"
+    stroke-width="3.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>`;
+  box.innerHTML = FIXED_CATS.map(c =>
+      `<button type="button" data-cat="${esc(c)}" aria-pressed="${String(c === xcat)}">${esc(c)}</button>`).join('')
+    + known.map(c => catEditing
+      ? `<button type="button" class="removable" data-drop="${esc(c)}"
+           aria-label="Remove ${esc(c)} from the list">${esc(c)}${x}</button>`
+      : `<button type="button" data-cat="${esc(c)}" aria-pressed="${String(c === xcat)}">${esc(c)}</button>`).join('')
+    + (catEditing ? ''
+      : `<button type="button" data-cat="__other" aria-pressed="${String(isOther && !known.includes(xcat))}">Other…</button>`);
+
+  box.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => {
     if (b.dataset.cat === '__other') {
       xcat = 'Other';
       other.hidden = false; renderCats(); other.focus();
@@ -718,8 +743,25 @@ function renderCats() {
       xcat = b.dataset.cat; other.hidden = true; other.value = ''; renderCats();
     }
   });
+  box.querySelectorAll('[data-drop]').forEach(b => b.onclick = async () => {
+    const cat = b.dataset.drop;
+    const n = state.expenses.filter(e => e.cat === cat).length;
+    if (!confirm(`Take "${cat}" off the list?\n\n`
+      + `The ${n} ${n === 1 ? 'expense' : 'expenses'} already filed under it stay where they are `
+      + `and keep counting toward your totals. Only the button goes.`)) return;
+    state.hiddenCats = [...new Set([...(state.hiddenCats || []), cat])];
+    if (xcat === cat) { xcat = FIXED_CATS[0]; other.hidden = true; other.value = ''; }
+    await save(); renderCats(); renderAll();
+    toast(`"${cat}" removed from the list.`, 'Undo', async () => {
+      state.hiddenCats = state.hiddenCats.filter(c => c !== cat);
+      await save(); renderCats(); renderAll();
+    }, 7000);
+  });
+
   if (!other.hidden && isOther && !known.includes(xcat)) other.hidden = false;
 }
+
+document.getElementById('xCatEdit').onclick = () => { catEditing = !catEditing; renderCats(); };
 
 function openExpense(id, preset) {
   xediting = id ? state.expenses.find(e => e.id === id) : null;
@@ -729,8 +771,9 @@ function openExpense(id, preset) {
   document.getElementById('xAmt').value = xediting ? group(xediting.amount) : '';
   document.getElementById('xDate').value = xediting ? xediting.date : todayISO();
   document.getElementById('xNote').value = xediting ? (xediting.note || '') : (preset?.note || '');
+  catEditing = false;
   xcat = xediting ? xediting.cat : (preset?.cat || FIXED_CATS[0]);
-  const custom = !FIXED_CATS.includes(xcat) && !customCats().includes(xcat);
+  const custom = !FIXED_CATS.includes(xcat) && !customCats({ all: true }).includes(xcat);
   other.hidden = !custom;
   other.value = custom && xcat !== 'Other' ? xcat : '';
   renderCats(); syncXDate();
@@ -755,6 +798,10 @@ document.getElementById('xSave').onclick = async () => {
   if (!(amount > 0)) { toast('Enter an amount.'); return; }
   const typed = document.getElementById('xCatOther');
   const cat = normCat(!typed.hidden && typed.value.trim() ? typed.value : xcat);
+  // Typing a name that was removed earlier is how you ask for it back.
+  if ((state.hiddenCats || []).includes(cat)) {
+    state.hiddenCats = state.hiddenCats.filter(c => c !== cat);
+  }
   const date = document.getElementById('xDate').value || todayISO();
   const note = document.getElementById('xNote').value.trim();
 
@@ -1196,6 +1243,7 @@ if ('serviceWorker' in navigator) {
   const doc = await readDoc();
   if (doc) state = Object.assign(blank(), doc);
   if (!Array.isArray(state.expenses)) state.expenses = [];
+  if (!Array.isArray(state.hiddenCats)) state.hiddenCats = [];
   state.v = 2;
   renderAll();
   go('pace');

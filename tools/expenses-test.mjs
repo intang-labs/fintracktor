@@ -166,6 +166,59 @@ const text = await readFile(await dl.path(), 'utf8');
 check('with a header', text.split('\r\n')[0], 'Date,Amount,Category,Note');
 check('and the typed category', /2026-10-14,1500,Gifts,/.test(text), 'true');
 
+console.log('\nremoving a category from the picker');
+page.on('dialog', d => d.accept());
+await page.click('nav button[data-tab="spend"]');
+await page.waitForTimeout(250);
+const before = await page.locator('#tab-spend .spend-total').textContent();
+await page.click('#fab');
+await page.waitForTimeout(400);
+check('Edit appears once there is a typed category',
+  await page.locator('#xCatEdit').isVisible(), 'true');
+await page.click('#xCatEdit');
+await page.waitForTimeout(150);
+check('the typed one becomes removable',
+  await page.locator('#xCats button[data-drop="Gifts"]').count(), 1);
+check('the fixed ones do not',
+  await page.locator('#xCats button[data-drop="Food"]').count(), 0);
+await page.click('#xCats button[data-drop="Gifts"]');
+await page.waitForTimeout(450);
+check('the chip is gone', await page.locator('#xCats button[data-cat="Gifts"]').count(), 0);
+check('and Edit goes with it', await page.locator('#xCatEdit').isVisible(), 'false');
+await page.click('#xsheetClose');
+await page.waitForTimeout(400);
+
+// The whole point: the button goes, the money does not.
+check('the month total is untouched',
+  await page.locator('#tab-spend .spend-total').textContent(), before);
+check('the category is still in the breakdown',
+  (await page.locator('#tab-spend .bd-name').allTextContents()).includes('Gifts'), 'true');
+check('and still labels its expense',
+  await page.locator('#tab-spend .swipe').filter({ hasText: '₹1,500' }).locator('.xcat').textContent(), 'Gifts');
+
+console.log('\nediting an expense that wears a removed category');
+await page.locator('#tab-spend .swipe').filter({ hasText: '₹1,500' }).locator('.face').click();
+await page.waitForTimeout(400);
+check('its chip comes back for that sheet',
+  await page.locator('#xCats button[data-cat="Gifts"]').getAttribute('aria-pressed'), 'true');
+await page.click('#xsheetClose');
+await page.waitForTimeout(400);
+
+console.log('\ntyping the name again brings it back');
+await page.click('#fab');
+await page.waitForTimeout(400);
+check('it is not offered', await page.locator('#xCats button[data-cat="Gifts"]').count(), 0);
+await page.fill('#xAmt', '1');
+await page.click('#xCats button[data-cat="__other"]');
+await page.fill('#xCatOther', 'gifts');
+await page.click('#xSave');
+await page.waitForTimeout(500);
+await page.click('#fab');
+await page.waitForTimeout(400);
+check('and it is offered again', await page.locator('#xCats button[data-cat="Gifts"]').count(), 1);
+await page.click('#xsheetClose');
+await page.waitForTimeout(400);
+
 check('no console errors', errors.join(' | ') || 'none', 'none');
 
 await page.click('nav button[data-tab="spend"]');
