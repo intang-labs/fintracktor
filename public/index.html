@@ -274,7 +274,10 @@
   </label>
 
   <div class="catfield">
-    <span class="lbl">Category</span>
+    <span class="catfield-head">
+      <span class="lbl">Category</span>
+      <button type="button" id="xCatEdit" hidden>Edit</button>
+    </span>
     <div class="cats" id="xCats" role="group" aria-label="Category"></div>
     <input id="xCatOther" class="catother" type="text" placeholder="Name this category"
            autocomplete="off" maxlength="24" aria-label="Category name" hidden>

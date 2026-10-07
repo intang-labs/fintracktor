@@ -57,6 +57,15 @@ are five fixed ones — Food, Transport, Bills, Shopping, Health — plus **Othe
 which lets you type a name. A typed name becomes a chip of its own next time, in
 order of first use, so it stays put as history grows.
 
+The list gets long, so **Edit** in the category field puts a × on the typed ones.
+Removing a chip takes it off the picker and nothing else: the expenses already
+filed under it keep their label, stay in the month total and stay in the
+breakdown. The five fixed categories cannot be removed. Typing the same name
+again under Other brings its chip back, and the confirmation offers an undo for
+seven seconds. A removed category still appears on the picker while you are
+editing an expense that wears it — otherwise saving that expense would quietly
+change its category.
+
 Set a **monthly cap** in Setup and Pace gains a spending card: what you have
 spent, what is left, what that leaves per day, and whether today's rate lands you
 over by month end. Without a cap, spending is still recorded, just not measured
